@@ -4,7 +4,7 @@
 const width = 1350;
 const height = 550;
 //you can change this number to change the number cell at start
-const numberofcellsatstart = 100;
+const numberofcellsatstart = 2500;
 //bigger number here means more land vs water
 // [0.5-1.5] are quite extreme bound already
 // 0.72 is ok for most value between 1000 and  20K points
@@ -29,10 +29,8 @@ var landcelllist = [];
 var shallowwatercelllist = [];
 var deepwatercelllist = [];
 var mountaincelllist = [];
-var tundracelllist = [];
 var hillcelllist = [];
-var grasscelllist = [];
-var bluemysterycelllist=[];
+var bluemysterycelllist = [];
 
 // color from factorio Fulgora planet
 const Fulgoracolor = {
@@ -49,7 +47,7 @@ const Fulgoracolor = {
   //mountain =  "fill island blue"
   mountain: "#737974",
   // this is specific to Fulgora
-  bluemystery :"#006299",
+  bluemystery: "#006299",
 };
 
 // Earth like color
@@ -61,7 +59,6 @@ const Earthcolor = {
   shallowwater: "#2f6397",
   water: "#212869",
   deepwater: "#12123b",
-  
 };
 // var to change the color palette
 
@@ -346,7 +343,7 @@ function makeimpassable(cellID) {
 function removeimpassable(cellID) {
   // remove it from the list
   impassablecelllist.splice(impassablecelllist.indexOf(cellID), 1);
-  console.log("list of impassable tile = " + impassablecelllist);
+  //console.log("list of impassable tile = " + impassablecelllist);
   // unpaint it
 
   let newselec = d3.selectAll("#name" + cellID + '[isimpassable="yes"]');
@@ -359,7 +356,7 @@ function removeimpassable(cellID) {
 function removelastimpassable(cellID) {
   // remove it from the list
   impassablecelllist.splice(impassablecelllist.indexOf(cellID), 1);
-  console.log("list of impassable tile = " + impassablecelllist);
+  //console.log("list of impassable tile = " + impassablecelllist);
 }
 
 // function to highlight the edge of a cell
@@ -501,23 +498,23 @@ function drawroadtoneighbour(cellID) {
 function pathfindclicker(cellID) {
   // if there is already an origin this click is a 2nd click designating a target
   if (hasorigin != "none") {
-    console.log("origin was " + hasorigin);
+    // console.log("origin was " + hasorigin);
     // set the origin for path
     var pathdargumentinit = d3.path();
     pathdargumentinit.moveTo(datamap[hasorigin][0], datamap[hasorigin][1]);
     //set the target
     hastarget = cellID;
-    console.log("target is now " + hastarget);
+    //console.log("target is now " + hastarget);
 
     // function to find a path between the cell whose ID is hasorigin and the cell whose ID is hastarget
     var celltovisit = pathfind(hasorigin, hastarget);
     // pathfind error handling (i'm not proud)
     if (celltovisit == undefined) {
-      console.log("bobbynofindo");
+      //console.log("bobbynofindo");
       return;
     } else {
       // tell which cell are going to be drawn as the path
-      console.log("path is going through cells " + celltovisit);
+      //console.log("path is going through cells " + celltovisit);
 
       // make a path to connect them
       for (i = 0; i < celltovisit.length; i++) {
@@ -539,7 +536,7 @@ function pathfindclicker(cellID) {
 
       // reset the origin to none for the 3rd click to act like the 1rst
       hasorigin = "none";
-      console.log("origin is now " + hasorigin);
+      //console.log("origin is now " + hasorigin);
       return;
     }
   }
@@ -547,7 +544,7 @@ function pathfindclicker(cellID) {
   // if no origin, set origin,
   if (hasorigin == "none") {
     hasorigin = cellID;
-    console.log("origin set as " + cellID);
+    // console.log("origin set as " + cellID);
     //make sure there is no target in case it's the 3rd click and not the first
     hastarget = "none";
   }
@@ -558,13 +555,13 @@ function pathfindclicker(cellID) {
 function pathfindclicker2(cellID) {
   // if there is already an origin this click is a 2nd click designating a target
   if (hasoriginp != "none") {
-    console.log("origin was " + hasoriginp);
+    //console.log("origin was " + hasoriginp);
     // set the origin for path
     var pathdargumentinit = d3.path();
     pathdargumentinit.moveTo(datamap[hasoriginp][0], datamap[hasoriginp][1]);
     //set the target
     hastargetp = cellID;
-    console.log("target is now " + hastargetp);
+    //console.log("target is now " + hastargetp);
     //draw as target
 
     svg
@@ -582,11 +579,11 @@ function pathfindclicker2(cellID) {
     var celltovisit = pathfind(hasoriginp, hastargetp);
     // pathfind error handling (i'm not proud)
     if (celltovisit == undefined) {
-      console.log("bobbynofindo");
+      // console.log("bobbynofindo");
       return;
     } else {
       // tell which cell are going to be drawn as the path
-      console.log("path is going through cells " + celltovisit);
+      //console.log("path is going through cells " + celltovisit);
 
       // make a path to connect them
       for (i = 0; i < celltovisit.length; i++) {
@@ -608,7 +605,7 @@ function pathfindclicker2(cellID) {
 
       // reset the origin to none for the 3rd click to act like the 1rst
       hasoriginp = "none";
-      console.log("origin is now " + hasoriginp);
+      //console.log("origin is now " + hasoriginp);
       return;
     }
   }
@@ -633,11 +630,11 @@ function pathfindclicker2(cellID) {
       .attr("stroke-width", 4)
       .attr("isanoriginforpath", "yes");
 
-    console.log("origin set as " + cellID);
+    // console.log("origin set as " + cellID);
     //make sure there is no target in case it's the 3rd click and not the first
     hastargetp = "none";
     let newselec = d3.selectAll('[isatargetforpath="yes"]');
-    console.log(newselec);
+
     newselec.remove();
   }
 }
@@ -647,13 +644,13 @@ function pathfindclicker2(cellID) {
 function pathfindclicker3(cellID) {
   // if there is already an origin this click is a 2nd click designating a target
   if (hasoriginp != "none") {
-    console.log("origin was " + hasoriginp);
+    // console.log("origin was " + hasoriginp);
     // set the origin for path
     var pathdargumentinit = d3.path();
     pathdargumentinit.moveTo(datamap[hasoriginp][0], datamap[hasoriginp][1]);
     //set the target
     hastargetp = cellID;
-    console.log("target is now " + hastargetp);
+    // console.log("target is now " + hastargetp);
     //draw as target
 
     svg
@@ -671,11 +668,11 @@ function pathfindclicker3(cellID) {
     var celltovisit = pathfindd(hasoriginp, hastargetp);
     // pathfind error handling (i'm not proud)
     if (celltovisit == undefined) {
-      console.log("bobbynofindo");
+      //console.log("bobbynofindo");
       return;
     } else {
       // tell which cell are going to be drawn as the path
-      console.log("path is going through cells " + celltovisit);
+      //console.log("path is going through cells " + celltovisit);
 
       // make a path to connect them
       for (i = 0; i < celltovisit.length; i++) {
@@ -697,7 +694,7 @@ function pathfindclicker3(cellID) {
 
       // reset the origin to none for the 3rd click to act like the 1rst
       hasoriginp = "none";
-      console.log("origin is now " + hasoriginp);
+      // console.log("origin is now " + hasoriginp);
       return;
     }
   }
@@ -722,7 +719,7 @@ function pathfindclicker3(cellID) {
       .attr("stroke-width", 4)
       .attr("isanoriginforpath", "yes");
 
-    console.log("origin set as " + cellID);
+    // console.log("origin set as " + cellID);
     //make sure there is no target in case it's the 3rd click and not the first
     hastargetp = "none";
     let newselec = d3.selectAll('[isatargetforpath="yes"]');
@@ -758,34 +755,19 @@ function pathfind(origincellid, targetcellid) {
 
     // search the neighbor of the origin
     var neighboured = [...voronoid.neighbors(origincellid)];
-    console.log(
-      "before removal , neighbour list of " +
-        origincellid +
-        " is " +
-        neighboured
-    );
+    //console.log( "before removal , neighbour list of " +  origincellid + " is " + neighboured );
 
     // list all impassable neighbour
     var badneighbour = neighboured.filter((element) =>
       impassablecelllist.includes(element)
     );
-    console.log(
-      "the bad neighbour due to impassability of " +
-        origincellid +
-        " are " +
-        badneighbour
-    );
+    // console.log( "the bad neighbour due to impassability of " + origincellid +   " are " +   badneighbour  );
     //list all visited neighbour
     var visitedneighbour = neighboured.filter((element) =>
       cellvisited.includes(element)
     );
 
-    console.log(
-      "the bad neighbour due to already visited of " +
-        origincellid +
-        " are " +
-        visitedneighbour
-    );
+    //console.log("the bad neighbour due to already visited of " + origincellid + " are " +visitedneighbour );
 
     // should also prevent revisiting a tile here
     // and remove visited tile as bad neighbour to prevent back and forth in cul de sac
@@ -840,16 +822,15 @@ function pathfind(origincellid, targetcellid) {
     cellvisited.push(origincellid);
     // from the best one pick neighbor
     if (bestneighbour == undefined) {
-      console.log("boy no push");
+      //console.log("boy no push");
       return;
     } else {
-      console.log(bestneighbour);
+      //console.log(bestneighbour);
       origincellid = bestneighbour;
       celltovisit.push(origincellid);
     }
   }
   if (celltovisit) {
-    console.log("bobby visit" + celltovisit);
     return celltovisit;
   } else {
     console.log("no path found bobby not smart sorry");
@@ -964,22 +945,10 @@ function fbackgroundcolors() {
     shallowwatercelllist = [];
     mountaincelllist = [];
     deepwatercelllist = [];
-   hillcelllist=[];
-   bluemysterycelllist=[];
+    hillcelllist = [];
+    bluemysterycelllist = [];
 
-    /*
-    //prepare array for coloration
-    // area is needed for land and moutain initially
-    let cellareaarray = [];
-    for (element of datamap) {
-      cellareaarray.push(
-        d3.polygonArea(polygonizemyID(datamap.indexOf(element)))
-      );
-    }
-    let averagecellarea = average(cellareaarray);
-    // this is not used anymore
-    */
-
+ 
     let averagecellarea = (height * width) / numberofcellsatstart;
 
     // iterate through each cell
@@ -990,8 +959,7 @@ function fbackgroundcolors() {
       ruleforland(element, averagecellarea);
       ruleforwater(element);
     }
-  
-  
+
     for (element of datamap) {
       // it doesn't work when put in the previous loop
       ruleformountain(element);
@@ -1001,23 +969,19 @@ function fbackgroundcolors() {
 
     for (element of datamap) {
       ruleforhills(element);
-     
     }
 
-   // for whatever reason this one shallow water need to be launched after rule for water otherwise the first one isn't finished and some tile aren't made shallow when they should
-   for (element of datamap) {
-    
-    ruleforshallowwater(element);
-   
-  }
+    // for whatever reason this one shallow water need to be launched after rule for water otherwise the first one isn't finished and some tile aren't made shallow when they should
+    for (element of datamap) {
+      ruleforshallowwater(element);
+    }
 
-
-  for (element of datamap) {
-    rulefordeepwater(element);
-  }
-  for (element of datamap) {
-    ruleforbluemystery(element);
-  }
+    for (element of datamap) {
+      rulefordeepwater(element);
+    }
+    for (element of datamap) {
+      ruleforbluemystery(element);
+    }
 
     // redraw things once at the end, above it all as we just did background color
     drawingbasend(delaunayd, voronoid);
@@ -1068,31 +1032,7 @@ function ruleforland(element, averagecellarea) {
   }
 }
 
-/* old mountain
-// mountains
-// some large land tiles
-// could be if all neighbour are land before dicerolling
-// then some of neighbour would become hills
 
-function ruleformountain (element){
-  if (landcelllist.includes(datamap.indexOf(element))) {
-    console.log("i tried")
-    let diceroll = Math.random();
-    
-    if (diceroll <= 0.02) {
-      landcelllist.splice(landcelllist.indexOf(element), 1);
-      if (!mountaincelllist.includes(datamap.indexOf(element))) {
-        mountaincelllist.push(datamap.indexOf(element));
-      }
-    }
-  }
-  if (mountaincelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(datamap.indexOf(element), planet.mountain, "mountain");
-  }
-
-
-}
-*/
 
 function ruleformountain(element) {
   if (
@@ -1183,7 +1123,11 @@ function hassomelandneighbour(cellID) {
 
   var hassomelandneighbour = false;
   for (element of neighboured) {
-    if (landcelllist.includes(element)||hillcelllist.includes(element)||mountaincelllist.includes(element)) {
+    if (
+      landcelllist.includes(element) ||
+      hillcelllist.includes(element) ||
+      mountaincelllist.includes(element)
+    ) {
       hassomelandneighbour = true;
     }
   }
@@ -1203,11 +1147,11 @@ function ruleforhills(element) {
   ) {
     hillcelllist.push(datamap.indexOf(element));
     landcelllist.splice(landcelllist.indexOf(datamap.indexOf(element)), 1);
-    
-    
-  } 
-  if (hillcelllist.includes(datamap.indexOf(element))&&!(hassomemountainneighbour(element))) {
-    console.log(hassomemountainneighbour(element))
+  }
+  if (
+    hillcelllist.includes(datamap.indexOf(element)) &&
+    !hassomemountainneighbour(element)
+  ) {
     hillcelllist.splice(hillcelllist.indexOf(datamap.indexOf(element)), 1);
     landcelllist.push(datamap.indexOf(element));
 
@@ -1269,26 +1213,23 @@ function areallneighbourarewater(element) {
 
 // function for the bluemystery
 
-function ruleforbluemystery (element){
-
-
-  if( mountaincelllist.includes(datamap.indexOf(element))){
-    
+function ruleforbluemystery(element) {
+  if (mountaincelllist.includes(datamap.indexOf(element))) {
     let diceroll = Math.random();
-        if (diceroll <= 0.9) {
-      mountaincelllist.splice(mountaincelllist.indexOf(datamap.indexOf(element),1))
-      bluemysterycelllist.push(datamap.indexOf(element))
-     
-    }   
+    if (diceroll <= 0.9) {
+      mountaincelllist.splice(
+        mountaincelllist.indexOf(datamap.indexOf(element), 1)
+      );
+      bluemysterycelllist.push(datamap.indexOf(element));
+    }
   }
 
-  if (hillcelllist.includes(datamap.indexOf(element))){
-    console.log("all good")
+  if (hillcelllist.includes(datamap.indexOf(element))) {
     let diceroll = Math.random();
-       if (diceroll <= 0.9) {
-    hillcelllist.splice(hillcelllist.indexOf(datamap.indexOf(element),1))
-    bluemysterycelllist.push(datamap.indexOf(element))}
-   
+    if (diceroll <= 0.9) {
+      hillcelllist.splice(hillcelllist.indexOf(datamap.indexOf(element), 1));
+      bluemysterycelllist.push(datamap.indexOf(element));
+    }
   }
   if (bluemysterycelllist.includes(datamap.indexOf(element))) {
     paintcellfillcolor(
@@ -1297,9 +1238,6 @@ function ruleforbluemystery (element){
       "bluemystery"
     );
   }
-
-
-
 }
 
 // function to remove all background colors
@@ -1314,8 +1252,9 @@ function polygonizemyID(cellID) {
   if (polygon) {
     return polygon;
   } else {
-    console.log("failure detected at cell " + cellID);
+    //console.log("failure detected at cell " + cellID);
     // if no polygon detected, just make a dummy empty triangle at origin
+    // it doesn't throw error
     return [
       [0, 0],
       [0, 0],
