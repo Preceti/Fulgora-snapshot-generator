@@ -4,7 +4,9 @@ to test the path finder you can use key "o" "p" or "m" from fastest and dumbest,
 first click select a cell as origin, second one the destination, o make path stick to compare fastest to find and shortest
 
 you can add obstacle by pressing "e" and clicking cells
+
 you can turn all landmass or all water or remove all obstacle in cycle by pressing "j" and clicking 
+
 you can hide the red overlay that highlight impassable terrain by pressing "k" and clicking
 
 pressing "a" and clicking add points 
