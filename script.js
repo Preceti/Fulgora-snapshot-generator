@@ -21,7 +21,13 @@ var hasoriginp = "none";
 var hastargetp = "none";
 var impassablecelllist = [];
 var adjacencysuperarray = [];
+var cleanadjacencysuperarray = [];
+//make background off by default for performance when smoothing
 var isbackgroundcoloractivated = false;
+//make impassable on by default
+var isimpassableactivated = true;
+// make no choice for what is impassable. ( "none"/ "noner" / "land" / "water")
+var impassablemode = "none";
 // list of type of cells
 var icecelllist = [];
 var watercelllist = [];
@@ -60,8 +66,8 @@ const Earthcolor = {
   water: "#212869",
   deepwater: "#12123b",
 };
-// var to change the color palette
 
+// var to change the color palette
 var planet = Fulgoracolor;
 
 // svg creation
@@ -73,7 +79,7 @@ const svg = d3
 container.append(svg.node());
 
 // keyboard detector
-d3.selectAll("*").on("keydown", function () {
+d3.selectAll("*").on("keydown", function (event) {
   keybeingpressed = event.key;
 });
 
@@ -84,19 +90,19 @@ d3.selectAll("*").on("keyup", function () {
 
 // click detector
 // letters are used to call function for now
-// first row, draw
+//  First part of the list draw on map
 function clickdetector(event) {
   //a call the function to add a new point
-  if (keybeingpressed == "a") {
+  if (keybeingpressed === "a") {
     newpoints(event);
     drawingbase(delaunayd, voronoid);
-    if (isbackgroundcoloractivated == true) {
+    if (isbackgroundcoloractivated === true) {
       fbackgroundcolors();
     }
   }
 
   // z smooth the graph
-  if (keybeingpressed == "z") {
+  if (keybeingpressed === "z") {
     drawallcentroids();
     replacecentroids(centroidcoordinatearray);
     graph = makegraph(datamap);
@@ -106,54 +112,56 @@ function clickdetector(event) {
   }
 
   // e paint an overlay on the cell to show it has been made "impassable terrain"
-
-  if (keybeingpressed == "e") {
+  if (keybeingpressed === "e") {
     markimpassable(whichcell(event));
   }
-  // r highlight edges of clicked cell and write its ID
 
-  if (keybeingpressed == "r") {
+  // r highlight edges of clicked cell and write its ID
+  if (keybeingpressed === "r") {
     draw1cell(whichcell(event));
     writecellID(event);
   }
 
   // t paint all cells in a gradiant of red based on their area
-  if (keybeingpressed == "t") {
+  if (keybeingpressed === "t") {
     paintallcellbasedontheirarea();
   }
+
   //y draw all centroids
-  if (keybeingpressed == "y") {
+  if (keybeingpressed === "y") {
     drawallcentroids();
   }
+
   //u replace earlier random points with new centroids and redo the voronoi diagram
-  if (keybeingpressed == "u") {
+  if (keybeingpressed === "u") {
     replacecentroids(centroidcoordinatearray);
   }
 
   //i draw a road to neighbouring cell
-  if (keybeingpressed == "i") {
+  if (keybeingpressed === "i") {
     drawroadtoneighbour(whichcell(event));
   }
 
   //o first select a cell as origin, then second click draw path from origin to target
   // lazy optimist
-  if (keybeingpressed == "o") {
+  if (keybeingpressed === "o") {
     pathfindclicker(whichcell(event));
   }
 
   //p first select a cell as origin, then second click draw path from origin to target
   // graph attempt
-  if (keybeingpressed == "p") {
+  if (keybeingpressed === "p") {
     pathfindclicker2(whichcell(event));
   }
 
   //p first select a cell as origin, then second click draw path from origin to target
   // graph attempt
-  if (keybeingpressed == "m") {
+  if (keybeingpressed === "m") {
     pathfindclicker3(whichcell(event));
   }
+
   // l to draw background colors
-  if (keybeingpressed == "l") {
+  if (keybeingpressed === "l") {
     if (isbackgroundcoloractivated === true) {
       isbackgroundcoloractivated = false;
       removebackgroundcolors();
@@ -162,24 +170,45 @@ function clickdetector(event) {
       fbackgroundcolors();
     }
   }
+
+  //k to hide/show impassable terrain
+  if (keybeingpressed === "k") {
+    if (isimpassableactivated === true) {
+      isimpassableactivated = false;
+      hideimpassableterrain();
+    } else {
+      isimpassableactivated = true;
+      paintimpassable();
+    }
+  }
+
+  //j to turn all "land" or "water" into impassable 3rd click reset
+  if (keybeingpressed === "j") {
+    //force visibility first anyway
+    if (isimpassableactivated != true) {
+      isimpassableactivated = true;
+    }
+    applyimpassablemode();
+  }
+
   // second row, write
   // q tell in the console the ID of the clicked cell
-  if (keybeingpressed == "q") {
+  if (keybeingpressed === "q") {
     console.log(whichcell(event));
   }
+
   // s tell in the console the area of the clicked cell
-  if (keybeingpressed == "s") {
+  if (keybeingpressed === "s") {
     console.log(d3.polygonArea(polygonizemyID(whichcell(event))));
   }
 
   // log in adjacency array
-
-  if (keybeingpressed == "d") {
+  if (keybeingpressed === "d") {
     console.log(readadjacency(datamap));
   }
-  // log in distance to other tiles
 
-  if (keybeingpressed == "f") {
+  // log in distance to other tiles
+  if (keybeingpressed === "f") {
     //readdistancetothertile(datamap, whichcell(event));
     makegraph(datamap);
   }
@@ -257,7 +286,6 @@ function drawingpoints(mouse) {
 function newpoints(event) {
   var mouse = d3.pointers(event);
   datamap.push([mouse[0][0], mouse[0][1]]);
-
   delaunayd = d3.Delaunay.from(datamap);
   voronoid = delaunayd.voronoi([0, 0, width, height]);
 }
@@ -272,7 +300,6 @@ function whichcell(event) {
 // function to write the ID of a cell
 function writecellID(event) {
   let cellID = whichcell(event);
-
   svg
     .append("text")
     .text(cellID)
@@ -296,10 +323,14 @@ function paintcell(cellID) {
 
 // function to paint all impassable cell
 function paintimpassable() {
-  for (element of impassablecelllist) {
-    paintcell(impassablecelllist[impassablecelllist.indexOf(element)]);
+  if (isimpassableactivated === true && impassablecelllist) {
+    for (element of impassablecelllist) {
+      paintcell(impassablecelllist[impassablecelllist.indexOf(element)]);
+    }
   }
 }
+
+//function to switch the impassable viz
 
 // function to paint a cell a certain color for background
 function paintcellfillcolor(cellID, color, attributestring) {
@@ -317,14 +348,12 @@ function paintcellfillcolor(cellID, color, attributestring) {
 // function to make a cell impassable if it wasn't or vice versa and call the paint job accordingly
 function markimpassable(cellID) {
   let iscellincluded = impassablecelllist.includes(cellID);
-  while (iscellincluded == true) {
+  while (iscellincluded === true) {
     removeimpassable(cellID);
-
     break;
   }
-  while (iscellincluded == false) {
+  while (iscellincluded === false) {
     makeimpassable(cellID);
-
     break;
   }
   return;
@@ -332,9 +361,9 @@ function markimpassable(cellID) {
 
 // function to make impassable
 function makeimpassable(cellID) {
+  console.log(impassablecelllist);
   // add it to the list
   impassablecelllist.push(cellID);
-  console.log("list of impassable tile = " + impassablecelllist);
   // paint it
   paintcell(cellID);
 }
@@ -343,20 +372,19 @@ function makeimpassable(cellID) {
 function removeimpassable(cellID) {
   // remove it from the list
   impassablecelllist.splice(impassablecelllist.indexOf(cellID), 1);
-  //console.log("list of impassable tile = " + impassablecelllist);
-  // unpaint it
-
+  //delete the overlay
   let newselec = d3.selectAll("#name" + cellID + '[isimpassable="yes"]');
   newselec.remove();
 
   return;
 }
 
-// function to remove 1 impassable
-function removelastimpassable(cellID) {
-  // remove it from the list
-  impassablecelllist.splice(impassablecelllist.indexOf(cellID), 1);
-  //console.log("list of impassable tile = " + impassablecelllist);
+// function to hide impassable
+function hideimpassableterrain() {
+  if (isimpassableactivated === false) {
+    let newselec = d3.selectAll('[isimpassable="yes"]');
+    newselec.remove();
+  }
 }
 
 // function to highlight the edge of a cell
@@ -428,12 +456,9 @@ function drawallcentroids() {
       yforcentroid.push(centroidcoordinatearrayrough[j][k][1]);
     }
     // make intermediate sum of all x and all y positions of all edge of a cell, and divide them by the number of edge to get an average position for that cell
-    intsumx =
-      xforcentroid.reduce((a, b) => a + b, 0) /
-      centroidcoordinatearrayrough[j].length;
-    intsumy =
-      yforcentroid.reduce((a, b) => a + b, 0) /
-      centroidcoordinatearrayrough[j].length;
+    intsumx = average(xforcentroid);
+    intsumy = average(yforcentroid);
+
     yforcentroid = [];
     xforcentroid = [];
     // push the couple [x,y] of the centroid for that cell id in an array with the same index
@@ -494,7 +519,7 @@ function drawroadtoneighbour(cellID) {
 }
 
 // function used to select a tile as origin or to draw a path from the origin to the target if there is already an origin
-// first version deprecated
+// first version left sticky path
 function pathfindclicker(cellID) {
   // if there is already an origin this click is a 2nd click designating a target
   if (hasorigin != "none") {
@@ -667,7 +692,7 @@ function pathfindclicker3(cellID) {
     // function to find a path between the cell whose ID is hasorigin and the cell whose ID is hastarget
     var celltovisit = pathfindd(hasoriginp, hastargetp);
     // pathfind error handling (i'm not proud)
-    if (celltovisit == undefined) {
+    if (celltovisit === undefined) {
       //console.log("bobbynofindo");
       return;
     } else {
@@ -700,7 +725,7 @@ function pathfindclicker3(cellID) {
   }
 
   // if no origin, delete the old overlay and set new origin and color it so it is visible
-  if (hasoriginp == "none") {
+  if (hasoriginp === "none") {
     let newselec2 = d3.selectAll('[isanoriginforpath="yes"]');
     newselec2.remove();
     // also delete the old drawn path
@@ -742,15 +767,6 @@ function pathfind(origincellid, targetcellid) {
     var targetx = datamap[targetcellid][0];
     var targety = datamap[targetcellid][1];
 
-    /*
-
-    // first compute crow fly distance between origin and target to use as guidance
-    var crowflydistance = Math.sqrt(
-      (targety - originy) ** 2 + (targetx - originx) ** 2
-    );
-
-    */
-
     // here remove forbidden neighbour => impassable terrain and such
 
     // search the neighbor of the origin
@@ -769,11 +785,7 @@ function pathfind(origincellid, targetcellid) {
 
     //console.log("the bad neighbour due to already visited of " + origincellid + " are " +visitedneighbour );
 
-    // should also prevent revisiting a tile here
-    // and remove visited tile as bad neighbour to prevent back and forth in cul de sac
-    // need a way to tell when destination can't be reached, like 100 attempts or so.
-    // djiskra ? with distance computed from center instead of 1 for next tile ?
-
+    // prevent revisiting a tile here
     // remove the bad neighbour from the potential neighbour
 
     while (badneighbour.length > 0) {
@@ -821,7 +833,7 @@ function pathfind(origincellid, targetcellid) {
     // mark the visited tile
     cellvisited.push(origincellid);
     // from the best one pick neighbor
-    if (bestneighbour == undefined) {
+    if (bestneighbour === undefined) {
       //console.log("boy no push");
       return;
     } else {
@@ -892,7 +904,7 @@ function removeimpassablefromadjacency() {
 // create a graph
 function makegraph(datamap) {
   // try to make a new graph from datapoints
-  const graph = new Graph();
+  const graph = new Graaph();
   readadjacency(datamap);
   cleanadjacencysuperarray = removeimpassablefromadjacency();
 
@@ -948,7 +960,6 @@ function fbackgroundcolors() {
     hillcelllist = [];
     bluemysterycelllist = [];
 
- 
     let averagecellarea = (height * width) / numberofcellsatstart;
 
     // iterate through each cell
@@ -990,7 +1001,7 @@ function fbackgroundcolors() {
 }
 
 // Actual rules for background colors
-//
+
 //ice
 //cells located in the 10% upper and lower part of the map are receiving "ice color"
 function ruleforice(element) {
@@ -1011,7 +1022,6 @@ function ruleforice(element) {
 }
 
 // land
-//
 function ruleforland(element, averagecellarea) {
   // amongst valid candidate
   if (element[1] < 0.96 * height && element[1] > 0.04 * height) {
@@ -1032,8 +1042,7 @@ function ruleforland(element, averagecellarea) {
   }
 }
 
-
-
+// mountains
 function ruleformountain(element) {
   if (
     areallneighbourland(element) &&
@@ -1070,8 +1079,8 @@ function areallneighbourland(cellID) {
 }
 
 // water is the default
-// some of the ice tile are turned into water, and all the empty tile too
 function ruleforwater(element) {
+  // some of the ice tile are turned into water, and all the empty tile too
   if (icecelllist.includes(datamap.indexOf(element))) {
     let diceroll = Math.random();
     if (diceroll <= 0.3) {
@@ -1094,10 +1103,9 @@ function ruleforwater(element) {
 }
 
 // shallow water
-// is done after water which is the fill for empty tile
-// aim : any tile that is water and touching a coast
-
 function ruleforshallowwater(element) {
+  // is done after water which is the fill for empty tile
+  // aim : any tile that is water and touching a coast
   // for each neighbour check if it's land and if tile is not  already shallow water
   if (
     hassomelandneighbour(element) &&
@@ -1116,8 +1124,8 @@ function ruleforshallowwater(element) {
     );
   }
 }
-//function to test if the cell as some land neighbour
 
+//function to test if the cell as some land neighbour
 function hassomelandneighbour(cellID) {
   let neighboured = [...voronoid.neighbors(datamap.indexOf(cellID))];
 
@@ -1135,9 +1143,8 @@ function hassomelandneighbour(cellID) {
 }
 
 // hills
-// if there is a mountain neighbour a diceroll
-
 function ruleforhills(element) {
+  // if there is a mountain neighbour a diceroll
   // for each neighbour check if it's land and if tile is not  already shallow water
   if (
     hassomemountainneighbour(element) &&
@@ -1166,21 +1173,18 @@ function ruleforhills(element) {
 //function to test is the cell has some mountain neighbors
 function hassomemountainneighbour(cellID) {
   let neighboured = [...voronoid.neighbors(datamap.indexOf(cellID))];
-
   var hassomemountainneighbour = false;
   for (element of neighboured) {
     if (mountaincelllist.includes(element)) {
       hassomemountainneighbour = true;
     }
   }
-
   return hassomemountainneighbour;
 }
 
 // deep water
-// water whose only connexion is other water
-
 function rulefordeepwater(element) {
+  // water whose only connexion is other water
   if (
     areallneighbourarewater(element) &&
     watercelllist.includes(datamap.indexOf(element)) &&
@@ -1212,25 +1216,30 @@ function areallneighbourarewater(element) {
 }
 
 // function for the bluemystery
-
 function ruleforbluemystery(element) {
-  if (mountaincelllist.includes(datamap.indexOf(element))) {
+  console.log("mountain list " + mountaincelllist);
+  console.log( mountaincelllist.includes(datamap.indexOf(element))) 
+  if (
+    mountaincelllist.includes(datamap.indexOf(element)) ||
+    hillcelllist.includes(datamap.indexOf(element))
+  ) {
     let diceroll = Math.random();
-    if (diceroll <= 0.9) {
-      mountaincelllist.splice(
-        mountaincelllist.indexOf(datamap.indexOf(element), 1)
-      );
-      bluemysterycelllist.push(datamap.indexOf(element));
-    }
-  }
-
-  if (hillcelllist.includes(datamap.indexOf(element))) {
-    let diceroll = Math.random();
-    if (diceroll <= 0.9) {
-      hillcelllist.splice(hillcelllist.indexOf(datamap.indexOf(element), 1));
-      bluemysterycelllist.push(datamap.indexOf(element));
-    }
-  }
+      if (mountaincelllist.includes(datamap.indexOf(element))) {
+      if (diceroll <=0.3){
+        bluemysterycelllist.push(datamap.indexOf(element));
+        mountaincelllist.splice(
+          mountaincelllist.indexOf(datamap.indexOf(element)),1
+        );
+        
+      }} else  {
+        if (diceroll <= 0.1){
+        bluemysterycelllist.push(datamap.indexOf(element));
+        hillcelllist.splice(hillcelllist.indexOf(datamap.indexOf(element)),1);
+       
+      }
+    }}
+  
+  console.log("blue list " + bluemysterycelllist);
   if (bluemysterycelllist.includes(datamap.indexOf(element))) {
     paintcellfillcolor(
       datamap.indexOf(element),
@@ -1244,6 +1253,51 @@ function ruleforbluemystery(element) {
 function removebackgroundcolors() {
   let newselec = d3.selectAll("[background]");
   newselec.remove();
+}
+
+//function to manage the impassable mode
+function applyimpassablemode() {
+  let newselec = d3.selectAll('[isimpassable="yes"]');
+  newselec.remove();
+
+  if (impassablemode === "none") {
+    console.log("none detec");
+    impassablemode = "land";
+    makealllandimpassable();
+    console.log("land active");
+  } else if (impassablemode === "land") {
+    console.log("land detec");
+    impassablemode = "water";
+    makeallwaterimpassable();
+    console.log("water active");
+  } else if (impassablemode === "water") {
+    console.log("water detec");
+    impassablecelllist = [];
+    impassablemode = "none";
+    console.log("none active");
+  }
+  console.log("before paint");
+  paintimpassable();
+  console.log("after paint");
+}
+
+// function to make all land impassable
+function makealllandimpassable() {
+  impassablecelllist = [];
+  impassablecelllist.push(...landcelllist);
+  impassablecelllist.push(...hillcelllist);
+  impassablecelllist.push(...mountaincelllist);
+  impassablecelllist.push(...bluemysterycelllist);
+
+  // should be for fulgora only
+  impassablecelllist.push(...shallowwatercelllist);
+}
+
+// function to make all water impassable
+function makeallwaterimpassable() {
+  impassablecelllist = [];
+  impassablecelllist.push(...watercelllist);
+  impassablecelllist.push(...deepwatercelllist);
 }
 
 // function to spit the coordinate of the polygon from its ID
@@ -1265,7 +1319,6 @@ function polygonizemyID(cellID) {
 
 // Actual beginning of the script run when the page is loaded
 drawingbase(delaunayd, voronoid);
-
 svg.on("click", function (event) {
   clickdetector(event);
 });
