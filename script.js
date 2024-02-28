@@ -1,8 +1,9 @@
 // generic definition and initialization
 // svg definition : bounding box
-// this is fit to small notebook
-const width = 1350;
-const height = 550;
+// removed % to prevent scrollbar appearing
+//0.98*document.documentElement.clientWidth;
+const width = 0.98 * window.innerWidth;
+const height = 0.9 * window.innerHeight;
 //you can change this number to change the number cell at start
 const numberofcellsatstart = 2500;
 //bigger number here means more land vs water
@@ -22,11 +23,14 @@ var hastargetp = "none";
 var impassablecelllist = [];
 var adjacencysuperarray = [];
 var cleanadjacencysuperarray = [];
+var activecell = "none";
+var overlayactive = "none";
+
 //make background off by default for performance when smoothing
 var isbackgroundcoloractivated = false;
 //make impassable on by default
 var isimpassableactivated = true;
-// make no choice for what is impassable. ( "none"/ "noner" / "land" / "water")
+// make no choice for what is impassable. ( "none"/ "land" / "water")
 var impassablemode = "none";
 // list of type of cells
 var icecelllist = [];
@@ -69,11 +73,24 @@ const Earthcolor = {
 
 // var to change the color palette
 var planet = Fulgoracolor;
+// random data to illustrate
+var datamap = Array.from({ length: numberofcellsatstart }).map(() => {
+  return [
+    Math.round(width * Math.random()),
+    Math.round(height * Math.random()),
+  ];
+});
+
+// create delaunay triangulation for array of points
+var delaunayd = d3.Delaunay.from(datamap);
+
+//create a voronoi diagram from the previous delaunay triangulation
+var voronoid = delaunayd.voronoi([0, 0, width, height]);
 
 // svg creation
 const svg = d3
   .create("svg")
-  .attr("id", "test1")
+  .attr("id", "maincontainer")
   .attr("width", width)
   .attr("height", height);
 container.append(svg.node());
@@ -118,13 +135,23 @@ function clickdetector(event) {
 
   // r highlight edges of clicked cell and write its ID
   if (keybeingpressed === "r") {
-    draw1cell(whichcell(event));
-    writecellID(event);
+    let previouscell = activecell;
+    if (activecell != "none") {
+      delete1cell();
+      deletelabels();
+    }
+    if (activecell === "none") {
+      activecell = whichcell(event);
+      if (activecell != previouscell) {
+        draw1cell(activecell);
+        writecellID(event);
+      }
+    }
   }
 
-  // t paint all cells in a gradiant of red based on their area
+  // t paint all cells with a temporary overlay according to various criterions
   if (keybeingpressed === "t") {
-    paintallcellbasedontheirarea();
+    overlaymanager();
   }
 
   //y draw all centroids
@@ -214,20 +241,6 @@ function clickdetector(event) {
   }
 }
 
-// random data to illustrate
-var datamap = Array.from({ length: numberofcellsatstart }).map(() => {
-  return [
-    Math.round(width * Math.random()),
-    Math.round(height * Math.random()),
-  ];
-});
-
-// create delaunay triangulation for array of points
-var delaunayd = d3.Delaunay.from(datamap);
-
-//create a voronoi diagram from the previous delaunay triangulation
-var voronoid = delaunayd.voronoi([0, 0, width, height]);
-
 // helper function to make average
 const average = (array) => array.reduce((a, b) => a + b) / array.length;
 
@@ -305,7 +318,13 @@ function writecellID(event) {
     .text(cellID)
     .attr("x", datamap[cellID][0])
     .attr("y", datamap[cellID][1])
-    .attr("font-size", "0.5em");
+    .attr("font-size", "1em");
+}
+
+// function to remove the ID of a cell
+function deletelabels() {
+  let newselec = d3.selectAll("[font-size]");
+  newselec.remove();
 }
 
 // function to paint a cell
@@ -329,8 +348,6 @@ function paintimpassable() {
     }
   }
 }
-
-//function to switch the impassable viz
 
 // function to paint a cell a certain color for background
 function paintcellfillcolor(cellID, color, attributestring) {
@@ -361,7 +378,6 @@ function markimpassable(cellID) {
 
 // function to make impassable
 function makeimpassable(cellID) {
-  console.log(impassablecelllist);
   // add it to the list
   impassablecelllist.push(cellID);
   // paint it
@@ -394,10 +410,98 @@ function draw1cell(cellID) {
     .attr("points", voronoid.cellPolygon(cellID))
     .attr("isaremovable", "yes")
     .attr("isapaintedcell", cellID)
+    .attr("isactivecell", "yes")
     .attr("fill-opacity", 0)
     .attr("opacity", 1)
     .attr("stroke", "green")
     .attr("stroke-width", 4);
+}
+
+// function to remove edge of cell
+
+function delete1cell() {
+  let newselec = d3.selectAll("[isactivecell");
+  newselec.remove();
+  activecell = "none";
+}
+
+// function to manage the overlays
+function overlaymanager() {
+  if (overlayactive === "none") {
+    overlayactive = "area";
+    paintallcellbasedontheirarea();
+  } else if (overlayactive === "area") {
+    let newselec = d3.selectAll('[isoverlay="yes"]');
+    newselec.remove();
+    overlayactive = "neighbournumber";
+    paintallcellbasedontheirneighbournumber();
+  } else if (overlayactive === "neighbournumber") {
+    let newselec = d3.selectAll('[isoverlay="yes"]');
+    newselec.remove();
+    overlayactive = "perimeter";
+    paintallcellbasedonperimeter()
+  }else if (overlayactive === "perimeter") {
+    let newselec = d3.selectAll('[isoverlay="yes"]');
+    newselec.remove();
+    overlayactive = "none";
+  }
+}
+
+// function to paint all cell based on the number of neighbour they have
+function paintallcellbasedontheirneighbournumber() {
+  for (element of datamap) {
+    let neighboured = [...voronoid.neighbors(datamap.indexOf(element))];
+    let color = "black";
+
+    switch (neighboured.length) {
+      case 1:
+        color = "Snow";
+        break;
+      case 2:
+        color = "LemonChiffon";
+        break;
+      case 3:
+        color = "LavenderBlush";
+        break;
+      case 4:
+        color = "MistyRose";
+        break;
+      case 5:
+        color = "NavajoWhite";
+        break;
+      case 6:
+        color = "LightSalmon";
+        break;
+      case 7:
+        color = "Bisque";
+        break;
+      case 8:
+        color = "LightSalmon";
+        break;
+      case 9:
+        color = "Coral";
+        break;
+      case 10:
+        color = "Tomato";
+        break;
+      case 11:
+        color = "OrangeRed";
+        break;
+      case 12:
+        color = "Red";
+        break;
+      case 13:
+        color = "DeepPink";
+        break;
+    }
+
+    svg
+      .append("path")
+      .attr("d", voronoid.renderCell(datamap.indexOf(element)))
+      .attr("opacity", 1)
+      .attr("isoverlay", "yes")
+      .attr("fill", color);
+  }
 }
 
 // better function to paint all cell
@@ -410,21 +514,52 @@ function paintallcellbasedontheirarea() {
   }
   //find largest cell
   let largestcell = Math.max(...datamapinfo);
-  // update all value in the array so that the largest cell is given a weight of 100 and the other proportionnal to it
-  for (let i = 0; i < datamapinfo.length; i++) {
-    datamapinfo[i] = 0 + Math.floor((datamapinfo[i] / largestcell) * 100);
-  }
   // paint all the cell with gradient from largest cell
-
   for (let i = 0; i < datamapinfo.length; i++) {
     svg
       .append("path")
       .attr("d", voronoid.renderCell(i))
-      .attr("opacity", 1 - datamapinfo[i] / 100)
-      .attr("fill", "red");
+      .attr("opacity", 1 - (Math.floor(((datamapinfo[i]) / largestcell) * 100)) / 100)
+      .attr("isoverlay", "yes")
+      .attr("fill", "blue");
   }
   //console.log(largestcell);
   //console.log(datamapinfo);
+}
+
+// paint all cell based on perimeter
+function paintallcellbasedonperimeter(){
+  // for each cell, pick each edge and calculate the distance to the following edge to put in array
+  // track longest perimeter in process
+  var longerperimeter= 0;
+  var datamapinfo =[];
+  for (element of datamap ){
+  let edgelist=polygonizemyID(datamap.indexOf(element));
+  let perimeter = [];
+    for ( let i=0;i<edgelist.length-1;i++){      
+       perimeter.push(Math.hypot(edgelist[i+1][0]-edgelist[i][0],edgelist[i+1][1]-edgelist[i][1]))
+          }
+          // sum this array and push result aka perimeter in datamapinfo
+          let sum = perimeter.reduce((a,b)=>a+b,0)
+          datamapinfo.push(sum)
+          if(sum>longerperimeter){
+            longerperimeter=sum;
+          }
+  }
+
+  // at this point datamap info contain an array with the perimeter of every cell and longerperimeter is a trusted value
+  //console.log(datamapinfo)
+
+for (let i = 0; i < datamapinfo.length; i++) {
+  svg
+    .append("path")
+    .attr("d", voronoid.renderCell(i))
+    .attr("opacity",  (Math.floor(((datamapinfo[i]) / longerperimeter) * 100)) / 100)
+    .attr("isoverlay", "yes")
+    .attr("fill", "green");
+}
+
+
 }
 
 // function to draw all center as the centroids
@@ -950,50 +1085,9 @@ function fbackgroundcolors() {
   svg.selectAll("*").remove();
   // then draw background if needed
   if (isbackgroundcoloractivated === true) {
-    // clean default tile
-    watercelllist = [];
-    icecelllist = [];
-    landcelllist = [];
-    shallowwatercelllist = [];
-    mountaincelllist = [];
-    deepwatercelllist = [];
-    hillcelllist = [];
-    bluemysterycelllist = [];
-
-    let averagecellarea = (height * width) / numberofcellsatstart;
-
-    // iterate through each cell
-    for (element of datamap) {
-      // apply rules
-      // no ice on Fulgora
-      // ruleforice(element);
-      ruleforland(element, averagecellarea);
-      ruleforwater(element);
+    if (planet === Fulgoracolor) {
+      Fulgoracolorrule();
     }
-
-    for (element of datamap) {
-      // it doesn't work when put in the previous loop
-      ruleformountain(element);
-    }
-    //same :( i notice this must be terribly innefficient way of doing as the more i add the slower it gets to do the garbage collection when it eventually starts
-    // even later deep water
-
-    for (element of datamap) {
-      ruleforhills(element);
-    }
-
-    // for whatever reason this one shallow water need to be launched after rule for water otherwise the first one isn't finished and some tile aren't made shallow when they should
-    for (element of datamap) {
-      ruleforshallowwater(element);
-    }
-
-    for (element of datamap) {
-      rulefordeepwater(element);
-    }
-    for (element of datamap) {
-      ruleforbluemystery(element);
-    }
-
     // redraw things once at the end, above it all as we just did background color
     drawingbasend(delaunayd, voronoid);
     paintimpassable();
@@ -1001,6 +1095,52 @@ function fbackgroundcolors() {
 }
 
 // Actual rules for background colors
+// function rule for Fulgora
+function Fulgoracolorrule() {
+  // clean default tile
+  watercelllist = [];
+  icecelllist = [];
+  landcelllist = [];
+  shallowwatercelllist = [];
+  mountaincelllist = [];
+  deepwatercelllist = [];
+  hillcelllist = [];
+  bluemysterycelllist = [];
+
+  let averagecellarea = (height * width) / numberofcellsatstart;
+
+  // iterate through each cell
+  for (element of datamap) {
+    // apply rules
+    // no ice on Fulgora
+    // ruleforice(element);
+    ruleforland(element, averagecellarea);
+    ruleforwater(element);
+  }
+
+  for (element of datamap) {
+    // it doesn't work when put in the previous loop
+    ruleformountain(element);
+  }
+  //same :( i notice this must be terribly innefficient way of doing as the more i add the slower it gets to do the garbage collection when it eventually starts
+  // even later deep water
+
+  for (element of datamap) {
+    ruleforhills(element);
+  }
+
+  // for whatever reason this one shallow water need to be launched after rule for water otherwise the first one isn't finished and some tile aren't made shallow when they should
+  for (element of datamap) {
+    ruleforshallowwater(element);
+  }
+
+  for (element of datamap) {
+    rulefordeepwater(element);
+  }
+  for (element of datamap) {
+    ruleforbluemystery(element);
+  }
+}
 
 //ice
 //cells located in the 10% upper and lower part of the map are receiving "ice color"
@@ -1217,29 +1357,27 @@ function areallneighbourarewater(element) {
 
 // function for the bluemystery
 function ruleforbluemystery(element) {
-  console.log("mountain list " + mountaincelllist);
-  console.log( mountaincelllist.includes(datamap.indexOf(element))) 
   if (
     mountaincelllist.includes(datamap.indexOf(element)) ||
     hillcelllist.includes(datamap.indexOf(element))
   ) {
     let diceroll = Math.random();
-      if (mountaincelllist.includes(datamap.indexOf(element))) {
-      if (diceroll <=0.3){
+    if (mountaincelllist.includes(datamap.indexOf(element))) {
+      if (diceroll <= 0.3) {
         bluemysterycelllist.push(datamap.indexOf(element));
         mountaincelllist.splice(
-          mountaincelllist.indexOf(datamap.indexOf(element)),1
+          mountaincelllist.indexOf(datamap.indexOf(element)),
+          1
         );
-        
-      }} else  {
-        if (diceroll <= 0.1){
-        bluemysterycelllist.push(datamap.indexOf(element));
-        hillcelllist.splice(hillcelllist.indexOf(datamap.indexOf(element)),1);
-       
       }
-    }}
-  
-  console.log("blue list " + bluemysterycelllist);
+    } else {
+      if (diceroll <= 0.1) {
+        bluemysterycelllist.push(datamap.indexOf(element));
+        hillcelllist.splice(hillcelllist.indexOf(datamap.indexOf(element)), 1);
+      }
+    }
+  }
+
   if (bluemysterycelllist.includes(datamap.indexOf(element))) {
     paintcellfillcolor(
       datamap.indexOf(element),
@@ -1261,24 +1399,17 @@ function applyimpassablemode() {
   newselec.remove();
 
   if (impassablemode === "none") {
-    console.log("none detec");
     impassablemode = "land";
     makealllandimpassable();
-    console.log("land active");
   } else if (impassablemode === "land") {
-    console.log("land detec");
     impassablemode = "water";
     makeallwaterimpassable();
-    console.log("water active");
   } else if (impassablemode === "water") {
-    console.log("water detec");
     impassablecelllist = [];
     impassablemode = "none";
-    console.log("none active");
   }
-  console.log("before paint");
+
   paintimpassable();
-  console.log("after paint");
 }
 
 // function to make all land impassable
@@ -1318,6 +1449,7 @@ function polygonizemyID(cellID) {
 }
 
 // Actual beginning of the script run when the page is loaded
+
 drawingbase(delaunayd, voronoid);
 svg.on("click", function (event) {
   clickdetector(event);
