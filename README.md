@@ -19,3 +19,5 @@ you can turn all landmass or all water or remove all obstacle in cycle by pressi
 you can hide the red overlay that highlight impassable terrain by pressing "k" and clicking
 
 you can cycle through other overlay pressing "t" and clicking
+
+"h" is used to add randomly colored overlay over the different landmasses, this makes no to use if there is no "l" for color and "j" to turn some tile impassable
