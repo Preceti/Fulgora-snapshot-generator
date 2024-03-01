@@ -21,10 +21,14 @@ var hastarget = "none";
 var hasoriginp = "none";
 var hastargetp = "none";
 var impassablecelllist = [];
+var passablecelllist = [];
 var adjacencysuperarray = [];
 var cleanadjacencysuperarray = [];
 var activecell = "none";
 var overlayactive = "none";
+var landmasses = "none";
+var landmasseslist = [];
+var landmassesedgelist = [];
 
 //make background off by default for performance when smoothing
 var isbackgroundcoloractivated = false;
@@ -216,6 +220,11 @@ function clickdetector(event) {
       isimpassableactivated = true;
     }
     applyimpassablemode();
+  }
+
+  //h to detect and hightlight landmasses
+  if (keybeingpressed === "h") {
+    landmassesmanager();
   }
 
   // second row, write
@@ -439,8 +448,8 @@ function overlaymanager() {
     let newselec = d3.selectAll('[isoverlay="yes"]');
     newselec.remove();
     overlayactive = "perimeter";
-    paintallcellbasedonperimeter()
-  }else if (overlayactive === "perimeter") {
+    paintallcellbasedonperimeter();
+  } else if (overlayactive === "perimeter") {
     let newselec = d3.selectAll('[isoverlay="yes"]');
     newselec.remove();
     overlayactive = "none";
@@ -519,7 +528,10 @@ function paintallcellbasedontheirarea() {
     svg
       .append("path")
       .attr("d", voronoid.renderCell(i))
-      .attr("opacity", 1 - (Math.floor(((datamapinfo[i]) / largestcell) * 100)) / 100)
+      .attr(
+        "opacity",
+        1 - Math.floor((datamapinfo[i] / largestcell) * 100) / 100
+      )
       .attr("isoverlay", "yes")
       .attr("fill", "blue");
   }
@@ -528,38 +540,44 @@ function paintallcellbasedontheirarea() {
 }
 
 // paint all cell based on perimeter
-function paintallcellbasedonperimeter(){
+function paintallcellbasedonperimeter() {
   // for each cell, pick each edge and calculate the distance to the following edge to put in array
   // track longest perimeter in process
-  var longerperimeter= 0;
-  var datamapinfo =[];
-  for (element of datamap ){
-  let edgelist=polygonizemyID(datamap.indexOf(element));
-  let perimeter = [];
-    for ( let i=0;i<edgelist.length-1;i++){      
-       perimeter.push(Math.hypot(edgelist[i+1][0]-edgelist[i][0],edgelist[i+1][1]-edgelist[i][1]))
-          }
-          // sum this array and push result aka perimeter in datamapinfo
-          let sum = perimeter.reduce((a,b)=>a+b,0)
-          datamapinfo.push(sum)
-          if(sum>longerperimeter){
-            longerperimeter=sum;
-          }
+  var longerperimeter = 0;
+  var datamapinfo = [];
+  for (element of datamap) {
+    let edgelist = polygonizemyID(datamap.indexOf(element));
+    let perimeter = [];
+    for (let i = 0; i < edgelist.length - 1; i++) {
+      perimeter.push(
+        Math.hypot(
+          edgelist[i + 1][0] - edgelist[i][0],
+          edgelist[i + 1][1] - edgelist[i][1]
+        )
+      );
+    }
+    // sum this array and push result aka perimeter in datamapinfo
+    let sum = perimeter.reduce((a, b) => a + b, 0);
+    datamapinfo.push(sum);
+    if (sum > longerperimeter) {
+      longerperimeter = sum;
+    }
   }
 
   // at this point datamap info contain an array with the perimeter of every cell and longerperimeter is a trusted value
   //console.log(datamapinfo)
 
-for (let i = 0; i < datamapinfo.length; i++) {
-  svg
-    .append("path")
-    .attr("d", voronoid.renderCell(i))
-    .attr("opacity",  (Math.floor(((datamapinfo[i]) / longerperimeter) * 100)) / 100)
-    .attr("isoverlay", "yes")
-    .attr("fill", "green");
-}
-
-
+  for (let i = 0; i < datamapinfo.length; i++) {
+    svg
+      .append("path")
+      .attr("d", voronoid.renderCell(i))
+      .attr(
+        "opacity",
+        Math.floor((datamapinfo[i] / longerperimeter) * 100) / 100
+      )
+      .attr("isoverlay", "yes")
+      .attr("fill", "green");
+  }
 }
 
 // function to draw all center as the centroids
@@ -1447,6 +1465,62 @@ function polygonizemyID(cellID) {
     ];
   }
 }
+
+// function to manage the landmasses visibility
+function landmassesmanager() {
+  if (landmasses === "none") {
+    findlandmasses();
+    showlandmasses();
+    if (landmasseslist.length > 0) {
+      landmasses = "visible";
+    }
+  } else if (landmasses === "hidden") {
+    findlandmasses();
+    showlandmasses();
+    landmasses = "visible";
+  } else if (landmasses === "visible") {
+    findlandmasses();
+    hidelandmasses();
+    landmasses = "hidden";
+  }
+}
+
+// function to show landmasses
+function showlandmasses() {
+
+
+  for (i=0;i<landmasseslist.length;i++){
+
+    let diceroll1 = Math.round(255*Math.random());
+    let diceroll2 = Math.round(255*Math.random());
+    let diceroll3 = Math.round(255*Math.random());
+
+
+    for ( j=0;j<landmasseslist[i].length;j++){    
+    svg
+    .append("path")
+    .attr("d", voronoid.renderCell(landmasseslist[i][j]))
+    .attr("fill", "rgb("+diceroll1+", "+diceroll2+" , "+diceroll3+")")
+    .attr("isaremovable", "yes")
+    .attr("isapaintedcell", landmasseslist[i][j])
+    .attr("fill-opacity", 0.3)
+    .attr("islandmassoverlay", "yes");
+   
+
+  }}
+ 
+}
+// funtion to hide landmasses
+function hidelandmasses() {
+
+ let newselec= d3.selectAll("[islandmassoverlay]");
+ newselec.remove()
+
+
+
+}
+
+
 
 // Actual beginning of the script run when the page is loaded
 
