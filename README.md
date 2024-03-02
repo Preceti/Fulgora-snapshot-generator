@@ -20,7 +20,7 @@ first click select a cell as origin, second one the destination, o make path sti
 
 you can cycle through other overlay pressing "t" and clicking, blue is cell area, green perimeter, the other show number of neighboring cells
 
-"h" is used to add randomly colored overlay over the different landmasses, this makes no to use if there is no "l" for color and "j" to turn some tile impassable
+"h" is used to add randomly colored overlay over the different landmasses, this makes no sense to use if there is no "l" for color and "j" to turn some tile impassable active alredy
 
 "²" will start playing background sound, wind, and i tried to find the driest thunder, but it still sound a bit like there's rain too.
 
