@@ -5,7 +5,7 @@
 const width = 0.98 * window.innerWidth;
 const height = 0.9 * window.innerHeight;
 //you can change this number to change the number cell at start
-const numberofcellsatstart = 2500;
+const numberofcellsatstart = 1500;
 //bigger number here means more land vs water
 // [0.5-1.5] are quite extreme bound already
 // 0.72 is ok for most value between 1000 and  20K points
@@ -29,6 +29,8 @@ var overlayactive = "none";
 var landmasses = "none";
 var landmasseslist = [];
 var landmassesedgelist = [];
+var daynight = "off";
+var currentnightpos = 0;
 
 //make background off by default for performance when smoothing
 var isbackgroundcoloractivated = false;
@@ -185,7 +187,7 @@ function clickdetector(event) {
     pathfindclicker2(whichcell(event));
   }
 
-  //p first select a cell as origin, then second click draw path from origin to target
+  //m first select a cell as origin, then second click draw path from origin to target
   // graph attempt
   if (keybeingpressed === "m") {
     pathfindclicker3(whichcell(event));
@@ -222,9 +224,26 @@ function clickdetector(event) {
     applyimpassablemode();
   }
 
-  //h to detect and hightlight landmasses
+  //h to detect and hightlight landmasses another time hide
   if (keybeingpressed === "h") {
     landmassesmanager();
+  }
+
+  // g to enable/ disable the day and night cycle
+  if (keybeingpressed === "g") {
+    if (daynight === "off") {
+      daynight = "on";
+      daynightcycler();
+      console.log("m");
+    } else {
+      daynight = "off";
+    }
+  }
+
+  // sound key
+  if (keybeingpressed === "²") {
+    customrepeatplay(FulgoraThunder);
+    customrepeatplay(FulgoraWind);
   }
 
   // second row, write
@@ -427,7 +446,6 @@ function draw1cell(cellID) {
 }
 
 // function to remove edge of cell
-
 function delete1cell() {
   let newselec = d3.selectAll("[isactivecell");
   newselec.remove();
@@ -1328,7 +1346,7 @@ function ruleforhills(element) {
   }
 }
 
-//function to test is the cell has some mountain neighbors
+//function to test if the cell has some mountain neighbors
 function hassomemountainneighbour(cellID) {
   let neighboured = [...voronoid.neighbors(datamap.indexOf(cellID))];
   var hassomemountainneighbour = false;
@@ -1337,6 +1355,7 @@ function hassomemountainneighbour(cellID) {
       hassomemountainneighbour = true;
     }
   }
+  neighboured = [];
   return hassomemountainneighbour;
 }
 
@@ -1479,7 +1498,6 @@ function landmassesmanager() {
     showlandmasses();
     landmasses = "visible";
   } else if (landmasses === "visible") {
-    findlandmasses();
     hidelandmasses();
     landmasses = "hidden";
   }
@@ -1487,40 +1505,159 @@ function landmassesmanager() {
 
 // function to show landmasses
 function showlandmasses() {
+  for (i = 0; i < landmasseslist.length; i++) {
+    let diceroll1 = Math.round(255 * Math.random());
+    let diceroll2 = Math.round(255 * Math.random());
+    let diceroll3 = Math.round(255 * Math.random());
 
-
-  for (i=0;i<landmasseslist.length;i++){
-
-    let diceroll1 = Math.round(255*Math.random());
-    let diceroll2 = Math.round(255*Math.random());
-    let diceroll3 = Math.round(255*Math.random());
-
-
-    for ( j=0;j<landmasseslist[i].length;j++){    
-    svg
-    .append("path")
-    .attr("d", voronoid.renderCell(landmasseslist[i][j]))
-    .attr("fill", "rgb("+diceroll1+", "+diceroll2+" , "+diceroll3+")")
-    .attr("isaremovable", "yes")
-    .attr("isapaintedcell", landmasseslist[i][j])
-    .attr("fill-opacity", 0.3)
-    .attr("islandmassoverlay", "yes");
-   
-
-  }}
- 
+    for (j = 0; j < landmasseslist[i].length; j++) {
+      svg
+        .append("path")
+        .attr("d", voronoid.renderCell(landmasseslist[i][j]))
+        .attr(
+          "fill",
+          "rgb(" + diceroll1 + ", " + diceroll2 + " , " + diceroll3 + ")"
+        )
+        .attr("isaremovable", "yes")
+        .attr("isapaintedcell", landmasseslist[i][j])
+        .attr("fill-opacity", 0.3)
+        .attr("islandmassoverlay", "yes");
+    }
+  }
 }
+
 // funtion to hide landmasses
 function hidelandmasses() {
-
- let newselec= d3.selectAll("[islandmassoverlay]");
- newselec.remove()
-
-
-
+  let newselec = d3.selectAll("[islandmassoverlay]");
+  newselec.remove();
 }
 
+// function to draw the night/day cycle
+function daynightcycler() {
+  // time of a day in second
+  let daynightcycletime = 30;
+  // time between each update in millisec
+  let dayticktime = 20;
+  // amount of space to move the overlay each update
+  let baseoffset = width / ((daynightcycletime * 1000) / dayticktime);
 
+  // set the time waiting between 2 updates
+  let delay = (ms) => new Promise((res) => setTimeout(res, ms));
+  let Function = async () => {
+    // repeat unless toggled off
+    while (daynight === "on") {
+      //remove previous
+      let selecdaynight = d3.selectAll("[daynight]");
+      selecdaynight.remove();
+      // update path
+
+      currentnightpos = (currentnightpos + baseoffset) % (width);
+      currentnightpos2 = currentnightpos - (width);
+
+      let pathdargument = d3.path();
+      
+      // draw new 1
+      pathdargument.moveTo(0 + currentnightpos, 0.98*height);
+      pathdargument.bezierCurveTo(
+        0.15 * width + currentnightpos,
+        0.98*height,
+        0.15 * width + currentnightpos,
+        0.98*height,
+        0.15 * width + currentnightpos,
+        0.5 * height
+      );
+      pathdargument.bezierCurveTo(
+        0.15 * width + currentnightpos,
+        0.05*height,
+        0.15 * width + currentnightpos,
+        0.05*height,
+        0.5 * width + currentnightpos,
+        0.05*height
+      );
+      pathdargument.bezierCurveTo(
+        0.85 * width + currentnightpos,
+        0.05*height,
+        0.85 * width + currentnightpos,
+        0.05*height,
+        0.85 * width + currentnightpos,
+        0.5 * height
+      );
+      pathdargument.bezierCurveTo(
+        0.85 * width + currentnightpos,
+        0.98*height,
+        0.85 * width + currentnightpos,
+        0.98*height,
+         width + currentnightpos,
+         0.98*height
+      );
+      pathdargument.lineTo(width+currentnightpos,0);
+      pathdargument.lineTo(0+currentnightpos,0)
+ 
+      svg
+        .append("path")
+        .attr("d", pathdargument)
+        .attr("opacity", 0.5)
+        .attr("fill-color", "black")
+        .attr("daynight", true);
+
+        let pathdargument2 = d3.path();
+
+        pathdargument2.moveTo(0 + currentnightpos2, 0.98*height);
+        pathdargument2.bezierCurveTo(
+          0.15 * width + currentnightpos2,
+          0.98*height,
+          0.15 * width + currentnightpos2,
+          0.98*height,
+          0.15 * width + currentnightpos2,
+          0.5 * height
+        );
+        pathdargument2.bezierCurveTo(
+          0.15 * width + currentnightpos2,
+          0.05*height,
+          0.15 * width + currentnightpos2,
+          0.05*height,
+          0.5 * width + currentnightpos2,
+          0.05*height
+        );
+        pathdargument2.bezierCurveTo(
+          0.85 * width + currentnightpos2,
+          0.05*height,
+          0.85 * width + currentnightpos2,
+          0.05*height,
+          0.85 * width + currentnightpos2,
+          0.5 * height
+        );
+        pathdargument2.bezierCurveTo(
+          0.85 * width + currentnightpos2,
+          0.98*height,
+          0.85 * width + currentnightpos2,
+          0.98*height,
+           width + currentnightpos2,
+           0.98*height
+        );
+        pathdargument2.lineTo(width+currentnightpos2,0);
+        pathdargument2.lineTo(0+currentnightpos2,0)
+
+        svg
+        .append("path")
+        .attr("d", pathdargument2)
+        .attr("opacity", 0.5)
+        .attr("fill-color", "black")
+        .attr("daynight", true);
+
+
+      // wait before update
+      await delay(dayticktime);
+     // console.log("Waited" + dayticktime + "ms");
+    }
+// remove last
+    let selecdaynight = d3.selectAll("[daynight]");
+    selecdaynight.remove();
+  };
+
+  // actually start the controlled infinite loop
+  Function();
+}
 
 // Actual beginning of the script run when the page is loaded
 
