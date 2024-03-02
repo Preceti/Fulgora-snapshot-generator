@@ -6,6 +6,8 @@ pressing "z" and clicking smooth the graph
 
 pressing "l" and clicking paint the map
 
+pressing "r" and clicking a cell highlight its border and print its ID
+
 (ALL keys works this way for now)
 
 you can add obstacle by pressing "e" and clicking cells
@@ -25,3 +27,5 @@ you can cycle through other overlay pressing "t" and clicking, blue is cell area
 "²" will start playing background sound, wind, and i tried to find the driest thunder, but it still sound a bit like there's rain too.
 
 "g" will start showing the day and night cycle for the planet
+
+if "u" is the first key activated, it removes all points, allowing only manually placed points to be visible
