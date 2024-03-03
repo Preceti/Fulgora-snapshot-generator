@@ -26,6 +26,6 @@ you can cycle through other overlay pressing "t" and clicking, blue is cell area
 
 "²" will start playing background sound, wind, and i tried to find the driest thunder, but it still sound a bit like there's rain too.
 
-"g" will start showing the day and night cycle for the planet
+"g" will start showing the day and night cycle for the planet , cells not impassable when activated have a little light shining now
 
 if "u" is the first key activated, it removes all points, allowing only manually placed points to be visible
