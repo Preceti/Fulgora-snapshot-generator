@@ -20,7 +20,7 @@ class PriorityQueue {
   }
 }
 
-class Graph {
+class Graaph {
   constructor() {
     this.nodes = new Map();
   }

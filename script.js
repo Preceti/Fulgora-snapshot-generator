@@ -5,7 +5,7 @@
 const width = 0.98 * window.innerWidth;
 const height = 0.9 * window.innerHeight;
 //you can change this number to change the number cell at start
-const numberofcellsatstart = 1500;
+const numberofcellsatstart = 250;
 //bigger number here means more land vs water
 // [0.5-1.5] are quite extreme bound already
 // 0.72 is ok for most value between 1000 and  20K points
@@ -30,7 +30,11 @@ var landmasses = "none";
 var landmasseslist = [];
 var landmassesedgelist = [];
 var daynight = "off";
+var lightmode = "off";
 var currentnightpos = 0;
+var currentnightpos2 = 0;
+var pathdargument = 0;
+var pathdargument2 = 0;
 
 //make background off by default for performance when smoothing
 var isbackgroundcoloractivated = false;
@@ -234,7 +238,6 @@ function clickdetector(event) {
     if (daynight === "off") {
       daynight = "on";
       daynightcycler();
-      console.log("m");
     } else {
       daynight = "off";
     }
@@ -261,12 +264,6 @@ function clickdetector(event) {
   if (keybeingpressed === "d") {
     console.log(readadjacency(datamap));
   }
-
-  // log in distance to other tiles
-  if (keybeingpressed === "f") {
-    //readdistancetothertile(datamap, whichcell(event));
-    makegraph(datamap);
-  }
 }
 
 // helper function to make average
@@ -290,6 +287,7 @@ function drawingbasend(delaunayd, voronoid) {
     .attr("d", delaunayd.render())
     .attr("stroke", "brown")
     .attr("opacity", 0.2)
+    .attr("delaunay", true)
     .attr("fill", "none");
 
   // draw the voronoi diagram as a path
@@ -297,11 +295,16 @@ function drawingbasend(delaunayd, voronoid) {
     .append("path")
     .attr("d", voronoid.render())
     .attr("stroke", "black")
+    .attr("voronoi", true)
     .attr("fill", "none")
     .attr("opacity", 0.5);
 
   // daw the points triangulated by the delaunay
-  svg.append("path").attr("d", delaunayd.renderPoints(1)).attr("fill", "black");
+  svg
+    .append("path")
+    .attr("d", delaunayd.renderPoints(1))
+    .attr("fill", "black")
+    .attr("ispoints", "true");
 
   // draw the rectangle bound of the voronoid diagram
   svg
@@ -309,7 +312,8 @@ function drawingbasend(delaunayd, voronoid) {
     .attr("d", voronoid.renderBounds())
     .attr("stroke", "black")
     .attr("opacity", 1)
-    .attr("fill", "none");
+    .attr("fill", "none")
+    .attr("bounds", true);
 }
 
 // function called to draw additionnal things
@@ -319,6 +323,7 @@ function drawingpoints(mouse) {
     .attr("fill", "black")
     .attr("opacity", 0.5)
     .attr("r", 1)
+    .attr("iscenterofcell", "yes")
     .attr("cx", mouse[0][0])
     .attr("cy", mouse[0][1]);
 }
@@ -643,6 +648,7 @@ function drawallcentroids() {
       .attr("fill", "black")
       .attr("opacity", 0.5)
       .attr("r", 3)
+      .attr("iscenterofcell", "yes")
       .attr("cx", centroidcoordinatearray[i][0])
       .attr("cy", centroidcoordinatearray[i][1]);
   }
@@ -1534,16 +1540,20 @@ function hidelandmasses() {
 
 // function to draw the night/day cycle
 function daynightcycler() {
+  identifypassable();
+
   // time of a day in second
-  let daynightcycletime = 30;
+  let daynightcycletime = 60;
   // time between each update in millisec
-  let dayticktime = 20;
+  // 16 for 60 fps
+  // for some reason it becomes almost impossible to click a cell in night when the refresh is not visibly slow
+  let dayticktime = 30;
   // amount of space to move the overlay each update
   let baseoffset = width / ((daynightcycletime * 1000) / dayticktime);
 
   // set the time waiting between 2 updates
   let delay = (ms) => new Promise((res) => setTimeout(res, ms));
-  let Function = async () => {
+  let daynightFunction = async () => {
     // repeat unless toggled off
     while (daynight === "on") {
       //remove previous
@@ -1551,48 +1561,95 @@ function daynightcycler() {
       selecdaynight.remove();
       // update path
 
-      currentnightpos = (currentnightpos + baseoffset) % (width);
-      currentnightpos2 = currentnightpos - (width);
+      currentnightpos = (currentnightpos + baseoffset) % width;
+      currentnightpos2 = currentnightpos - width;
 
-      let pathdargument = d3.path();
-      
-      // draw new 1
-      pathdargument.moveTo(0 + currentnightpos, 0.98*height);
+      pathdargument = d3.path();
+
+      // drawn schematics required for understanding =>
+      // x are points designed by "beziercurveto"
+      // c are control points duplicated
+      // à represent path that slide
+      //////////////////////////////////////////////////////////////////////
+      //x.......c..ààààxàààà..c..............c..ààààxàààà..c......x.......//
+      //.........àà.........àà................àà.........àà...............//
+      //........à.............à..............à.............à..............//
+      //........x.............x..............x.............x..............//
+      //........à.............à..............à.............à..............//
+      //......àà...............àà..........àà...............àà............//
+      //xàààà...c.............c..ààààxàààà...c.............c..ààààx.......//
+      //////////////////////////////////////////////////////////////////////
+      // needlessly computationnaly expensive, but i wanted to try and use bezier curves
+
+      pathdargument.moveTo(0 + currentnightpos, 0.98 * height);
       pathdargument.bezierCurveTo(
         0.15 * width + currentnightpos,
-        0.98*height,
+        0.98 * height,
         0.15 * width + currentnightpos,
-        0.98*height,
+        0.98 * height,
         0.15 * width + currentnightpos,
         0.5 * height
       );
       pathdargument.bezierCurveTo(
         0.15 * width + currentnightpos,
-        0.05*height,
+        0.05 * height,
         0.15 * width + currentnightpos,
-        0.05*height,
+        0.05 * height,
         0.5 * width + currentnightpos,
-        0.05*height
+        0.05 * height
       );
       pathdargument.bezierCurveTo(
         0.85 * width + currentnightpos,
-        0.05*height,
+        0.05 * height,
         0.85 * width + currentnightpos,
-        0.05*height,
+        0.05 * height,
         0.85 * width + currentnightpos,
         0.5 * height
       );
       pathdargument.bezierCurveTo(
         0.85 * width + currentnightpos,
-        0.98*height,
+        0.98 * height,
         0.85 * width + currentnightpos,
-        0.98*height,
-         width + currentnightpos,
-         0.98*height
+        0.98 * height,
+        width + currentnightpos,
+        0.98 * height
       );
-      pathdargument.lineTo(width+currentnightpos,0);
-      pathdargument.lineTo(0+currentnightpos,0)
- 
+      pathdargument.lineTo(width + currentnightpos, 0);
+      pathdargument.lineTo(0 + currentnightpos2, 0);
+      pathdargument.lineTo(0 + currentnightpos2, 0.98 * height);
+      pathdargument.bezierCurveTo(
+        0.15 * width + currentnightpos2,
+        0.98 * height,
+        0.15 * width + currentnightpos2,
+        0.98 * height,
+        0.15 * width + currentnightpos2,
+        0.5 * height
+      );
+      pathdargument.bezierCurveTo(
+        0.15 * width + currentnightpos2,
+        0.05 * height,
+        0.15 * width + currentnightpos2,
+        0.05 * height,
+        0.5 * width + currentnightpos2,
+        0.05 * height
+      );
+      pathdargument.bezierCurveTo(
+        0.85 * width + currentnightpos2,
+        0.05 * height,
+        0.85 * width + currentnightpos2,
+        0.05 * height,
+        0.85 * width + currentnightpos2,
+        0.5 * height
+      );
+      pathdargument.bezierCurveTo(
+        0.85 * width + currentnightpos2,
+        0.98 * height,
+        0.85 * width + currentnightpos2,
+        0.98 * height,
+        width + currentnightpos2,
+        0.98 * height
+      );
+
       svg
         .append("path")
         .attr("d", pathdargument)
@@ -1600,64 +1657,75 @@ function daynightcycler() {
         .attr("fill-color", "black")
         .attr("daynight", true);
 
-        let pathdargument2 = d3.path();
-
-        pathdargument2.moveTo(0 + currentnightpos2, 0.98*height);
-        pathdargument2.bezierCurveTo(
-          0.15 * width + currentnightpos2,
-          0.98*height,
-          0.15 * width + currentnightpos2,
-          0.98*height,
-          0.15 * width + currentnightpos2,
-          0.5 * height
-        );
-        pathdargument2.bezierCurveTo(
-          0.15 * width + currentnightpos2,
-          0.05*height,
-          0.15 * width + currentnightpos2,
-          0.05*height,
-          0.5 * width + currentnightpos2,
-          0.05*height
-        );
-        pathdargument2.bezierCurveTo(
-          0.85 * width + currentnightpos2,
-          0.05*height,
-          0.85 * width + currentnightpos2,
-          0.05*height,
-          0.85 * width + currentnightpos2,
-          0.5 * height
-        );
-        pathdargument2.bezierCurveTo(
-          0.85 * width + currentnightpos2,
-          0.98*height,
-          0.85 * width + currentnightpos2,
-          0.98*height,
-           width + currentnightpos2,
-           0.98*height
-        );
-        pathdargument2.lineTo(width+currentnightpos2,0);
-        pathdargument2.lineTo(0+currentnightpos2,0)
-
-        svg
-        .append("path")
-        .attr("d", pathdargument2)
-        .attr("opacity", 0.5)
-        .attr("fill-color", "black")
-        .attr("daynight", true);
-
-
+      // call on the lights check each update may be smarter to stagger with % so every 5 updates, 10% of nodes are checked for performance
+      turnonthelights();
       // wait before update
       await delay(dayticktime);
-     // console.log("Waited" + dayticktime + "ms");
+      // console.log("Waited" + dayticktime + "ms");
     }
-// remove last
+    // remove last
     let selecdaynight = d3.selectAll("[daynight]");
     selecdaynight.remove();
+    turnonthelights();
   };
 
   // actually start the controlled infinite loop
-  Function();
+  daynightFunction();
 }
+
+// function drawing circle for "lights" in passable cells at night
+function turnonthelights() {
+  let newselec2 = d3.selectAll("[ispointsforlight]");
+  newselec2.remove();
+  //it works but i can't tell why ._groups[0][0]  is necessary??
+  let newselec = d3.selectAll("path" + "[daynight]")._groups[0][0];
+  let svg2 = document.getElementById("maincontainer");
+  if (newselec) {
+    // 3rd version takes only passable cells, and draw 1 path for all points
+    // random radius makes a gloow effect with the fast refresh from night moving
+    let pathjoiningpointsforlights = d3.path();
+    for (let i = 0; i < passablecelllist.length; i++) {
+      var pointObj = svg2.createSVGPoint();
+      pointObj.x = datamap[passablecelllist[i]][0];
+      pointObj.y = datamap[passablecelllist[i]][1];
+      if (newselec.isPointInFill(pointObj)) {
+        let radius = 3 + Math.round(1 * Math.random());
+        pathjoiningpointsforlights.moveTo(
+          datamap[passablecelllist[i]][0] + radius,
+          datamap[passablecelllist[i]][1]
+        );
+        pathjoiningpointsforlights.arc(
+          datamap[passablecelllist[i]][0],
+          datamap[passablecelllist[i]][1],
+          radius,
+          0,
+          2 * Math.PI
+        );
+      }
+      //console.log(svg2)
+    }
+
+    svg
+      .append("path")
+      .attr("d", pathjoiningpointsforlights)
+      .attr("fill", "yellow")
+      .attr("ispointsforlight", "true");
+  }
+  newselec = 0;
+  svg2 = 0;
+  
+}
+
+//helper function to identify passable cell
+function identifypassable() {
+  passablecelllist = [];
+  datamap.forEach((element) => {
+    if (!impassablecelllist.includes(datamap.indexOf(element))) {
+      passablecelllist.push(datamap.indexOf(element));
+    }
+  });
+}
+
 
 // Actual beginning of the script run when the page is loaded
 
