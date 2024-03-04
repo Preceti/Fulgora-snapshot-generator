@@ -1,5 +1,7 @@
 /!\I have no idea what i'm doing/!\
 
+TL:DR=>  press "f" and click once on the background for the "full" thing
+
 pressing "a" and clicking add points 
 
 pressing "z" and clicking smooth the graph
