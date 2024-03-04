@@ -5,7 +5,7 @@
 const width = 0.98 * window.innerWidth;
 const height = 0.9 * window.innerHeight;
 //you can change this number to change the number cell at start
-const numberofcellsatstart = 250;
+const numberofcellsatstart = 1500;
 //bigger number here means more land vs water
 // [0.5-1.5] are quite extreme bound already
 // 0.72 is ok for most value between 1000 and  20K points
@@ -33,8 +33,16 @@ var daynight = "off";
 var lightmode = "off";
 var currentnightpos = 0;
 var currentnightpos2 = 0;
-var pathdargument = 0;
-var pathdargument2 = 0;
+// when circle is small one can't see there is a bit missing with pi = 3
+var tau = 2 * Math.PI;
+var faketau = Math.floor(100 * tau) / 100;
+var fakertau = 6;
+var aretornadoesactive = false;
+var tornadospawner = [];
+var tornadoanimationframe = 12;
+var timecounter = 0;
+var averagecellarea = (height * width) / numberofcellsatstart;
+var tornadosize = 1.2 * Math.sqrt(averagecellarea);
 
 //make background off by default for performance when smoothing
 var isbackgroundcoloractivated = false;
@@ -240,13 +248,29 @@ function clickdetector(event) {
       daynightcycler();
     } else {
       daynight = "off";
+      daynightcycler();
     }
+  }
+
+  // f to activate the tornadoes ?
+  if (keybeingpressed === "f") {
+    smoothing(centroidcoordinatearray);
+    smoothing(centroidcoordinatearray);
+    smoothing(centroidcoordinatearray);
+    smoothing(centroidcoordinatearray);
+
+    tornadomanager();
   }
 
   // sound key
   if (keybeingpressed === "²") {
-    customrepeatplay(FulgoraThunder);
-    customrepeatplay(FulgoraWind);
+    if (ambiantsound != "playing") {
+      ambiantsound = "playing";
+      customrepeatplay(FulgoraThunder);
+      customrepeatplay(FulgoraWind);
+    } else {
+      ambiantsound = "off";
+    }
   }
 
   // second row, write
@@ -1149,8 +1173,6 @@ function Fulgoracolorrule() {
   hillcelllist = [];
   bluemysterycelllist = [];
 
-  let averagecellarea = (height * width) / numberofcellsatstart;
-
   // iterate through each cell
   for (element of datamap) {
     // apply rules
@@ -1159,28 +1181,60 @@ function Fulgoracolorrule() {
     ruleforland(element, averagecellarea);
     ruleforwater(element);
   }
-
   for (element of datamap) {
     // it doesn't work when put in the previous loop
+    // why ? seem inefficient way to do
     ruleformountain(element);
   }
-  //same :( i notice this must be terribly innefficient way of doing as the more i add the slower it gets to do the garbage collection when it eventually starts
-  // even later deep water
-
   for (element of datamap) {
     ruleforhills(element);
   }
-
-  // for whatever reason this one shallow water need to be launched after rule for water otherwise the first one isn't finished and some tile aren't made shallow when they should
   for (element of datamap) {
     ruleforshallowwater(element);
   }
-
   for (element of datamap) {
     rulefordeepwater(element);
   }
   for (element of datamap) {
     ruleforbluemystery(element);
+  }
+
+  // draw at the end only to avoid doubles drawing that was causing worse performance before
+  for (element of datamap) {
+    dothepainting(element);
+  }
+}
+
+// function to paint the colors after rule are applied
+function dothepainting(element) {
+  if (landcelllist.includes(datamap.indexOf(element))) {
+    paintcellfillcolor(datamap.indexOf(element), planet.land, "land");
+  }
+  if (mountaincelllist.includes(datamap.indexOf(element))) {
+    paintcellfillcolor(datamap.indexOf(element), planet.mountain, "mountain");
+  }
+  if (watercelllist.includes(datamap.indexOf(element))) {
+    paintcellfillcolor(datamap.indexOf(element), planet.water, "water");
+  }
+  if (shallowwatercelllist.includes(datamap.indexOf(element))) {
+    paintcellfillcolor(
+      datamap.indexOf(element),
+      planet.shallowwater,
+      "shallowwater"
+    );
+  }
+  if (hillcelllist.includes(datamap.indexOf(element))) {
+    paintcellfillcolor(datamap.indexOf(element), planet.hills, "hills");
+  }
+  if (deepwatercelllist.includes(datamap.indexOf(element))) {
+    paintcellfillcolor(datamap.indexOf(element), planet.deepwater, "deepwater");
+  }
+  if (bluemysterycelllist.includes(datamap.indexOf(element))) {
+    paintcellfillcolor(
+      datamap.indexOf(element),
+      planet.bluemystery,
+      "bluemystery"
+    );
   }
 }
 
@@ -1218,10 +1272,6 @@ function ruleforland(element, averagecellarea) {
       landcelllist.push(datamap.indexOf(element));
     }
   }
-
-  if (landcelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(datamap.indexOf(element), planet.land, "land");
-  }
 }
 
 // mountains
@@ -1233,10 +1283,6 @@ function ruleformountain(element) {
   ) {
     mountaincelllist.push(datamap.indexOf(element));
     landcelllist.splice(landcelllist.indexOf(datamap.indexOf(element)), 1);
-  }
-
-  if (mountaincelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(datamap.indexOf(element), planet.mountain, "mountain");
   }
 }
 
@@ -1278,10 +1324,6 @@ function ruleforwater(element) {
       }
     }
   }
-
-  if (watercelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(datamap.indexOf(element), planet.water, "water");
-  }
 }
 
 // shallow water
@@ -1296,14 +1338,6 @@ function ruleforshallowwater(element) {
   ) {
     shallowwatercelllist.push(datamap.indexOf(element));
     watercelllist.splice(watercelllist.indexOf(datamap.indexOf(element)), 1);
-  }
-
-  if (shallowwatercelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(
-      datamap.indexOf(element),
-      planet.shallowwater,
-      "shallowwater"
-    );
   }
 }
 
@@ -1337,19 +1371,17 @@ function ruleforhills(element) {
     hillcelllist.push(datamap.indexOf(element));
     landcelllist.splice(landcelllist.indexOf(datamap.indexOf(element)), 1);
   }
+  /* since no diceroll can downgrade hill or mountain, this is not necessary
   if (
     hillcelllist.includes(datamap.indexOf(element)) &&
     !hassomemountainneighbour(element)
   ) {
     hillcelllist.splice(hillcelllist.indexOf(datamap.indexOf(element)), 1);
     landcelllist.push(datamap.indexOf(element));
-
     paintcellfillcolor(datamap.indexOf(element), planet.land, "land");
+    console.log("not useless")
   }
-
-  if (hillcelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(datamap.indexOf(element), planet.hills, "hills");
-  }
+  */
 }
 
 //function to test if the cell has some mountain neighbors
@@ -1375,10 +1407,6 @@ function rulefordeepwater(element) {
   ) {
     deepwatercelllist.push(datamap.indexOf(element));
     watercelllist.splice(watercelllist.indexOf(datamap.indexOf(element)), 1);
-  }
-
-  if (deepwatercelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(datamap.indexOf(element), planet.deepwater, "deepwater");
   }
 }
 
@@ -1419,14 +1447,6 @@ function ruleforbluemystery(element) {
         hillcelllist.splice(hillcelllist.indexOf(datamap.indexOf(element)), 1);
       }
     }
-  }
-
-  if (bluemysterycelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(
-      datamap.indexOf(element),
-      planet.bluemystery,
-      "bluemystery"
-    );
   }
 }
 
@@ -1540,125 +1560,66 @@ function hidelandmasses() {
 
 // function to draw the night/day cycle
 function daynightcycler() {
+  // start with recent list not updated for performance
   identifypassable();
 
+  timecounter = 0;
+
   // time of a day in second
-  let daynightcycletime = 60;
+  let daynightcycletime = 30;
   // time between each update in millisec
   // 16 for 60 fps
   // for some reason it becomes almost impossible to click a cell in night when the refresh is not visibly slow
-  let dayticktime = 30;
+  let dayticktime = 16;
   // amount of space to move the overlay each update
   let baseoffset = width / ((daynightcycletime * 1000) / dayticktime);
 
   // set the time waiting between 2 updates
   let delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
+  //calculate position and size based on user browser window
+  currentnightpos = 0;
+  currentnightpos2 = (currentnightpos - width);
+
+  // draw a shade shape that will slide to represent nightcycle
+  drawtheshading();
+
+  // defining this svg as the selection to be translated
+  // magic
+  var selecdaynight = d3.selectAll("[daynight]")._groups[0][0];
+  var xforms = selecdaynight.transform.baseVal;
+  var firstXForm = xforms.getItem(0);
+
   let daynightFunction = async () => {
     // repeat unless toggled off
     while (daynight === "on") {
-      //remove previous
-      let selecdaynight = d3.selectAll("[daynight]");
-      selecdaynight.remove();
-      // update path
+      timecounter = (timecounter + 1) % 1000;
 
+      lightmode = "on";
+      // why this need be here ?
+      let selecdaynight = d3.selectAll("[daynight]")._groups[0][0];
+      // update position
       currentnightpos = (currentnightpos + baseoffset) % width;
       currentnightpos2 = currentnightpos - width;
 
-      pathdargument = d3.path();
+      // magic
+      if (firstXForm.type == SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+        var firstX = firstXForm.matrix.e,
+          firstY = firstXForm.matrix.f;
+      }
 
-      // drawn schematics required for understanding =>
-      // x are points designed by "beziercurveto"
-      // c are control points duplicated
-      // à represent path that slide
-      //////////////////////////////////////////////////////////////////////
-      //x.......c..ààààxàààà..c..............c..ààààxàààà..c......x.......//
-      //.........àà.........àà................àà.........àà...............//
-      //........à.............à..............à.............à..............//
-      //........x.............x..............x.............x..............//
-      //........à.............à..............à.............à..............//
-      //......àà...............àà..........àà...............àà............//
-      //xàààà...c.............c..ààààxàààà...c.............c..ààààx.......//
-      //////////////////////////////////////////////////////////////////////
-      // needlessly computationnaly expensive, but i wanted to try and use bezier curves
-
-      pathdargument.moveTo(0 + currentnightpos, 0.98 * height);
-      pathdargument.bezierCurveTo(
-        0.15 * width + currentnightpos,
-        0.98 * height,
-        0.15 * width + currentnightpos,
-        0.98 * height,
-        0.15 * width + currentnightpos,
-        0.5 * height
-      );
-      pathdargument.bezierCurveTo(
-        0.15 * width + currentnightpos,
-        0.05 * height,
-        0.15 * width + currentnightpos,
-        0.05 * height,
-        0.5 * width + currentnightpos,
-        0.05 * height
-      );
-      pathdargument.bezierCurveTo(
-        0.85 * width + currentnightpos,
-        0.05 * height,
-        0.85 * width + currentnightpos,
-        0.05 * height,
-        0.85 * width + currentnightpos,
-        0.5 * height
-      );
-      pathdargument.bezierCurveTo(
-        0.85 * width + currentnightpos,
-        0.98 * height,
-        0.85 * width + currentnightpos,
-        0.98 * height,
-        width + currentnightpos,
-        0.98 * height
-      );
-      pathdargument.lineTo(width + currentnightpos, 0);
-      pathdargument.lineTo(0 + currentnightpos2, 0);
-      pathdargument.lineTo(0 + currentnightpos2, 0.98 * height);
-      pathdargument.bezierCurveTo(
-        0.15 * width + currentnightpos2,
-        0.98 * height,
-        0.15 * width + currentnightpos2,
-        0.98 * height,
-        0.15 * width + currentnightpos2,
-        0.5 * height
-      );
-      pathdargument.bezierCurveTo(
-        0.15 * width + currentnightpos2,
-        0.05 * height,
-        0.15 * width + currentnightpos2,
-        0.05 * height,
-        0.5 * width + currentnightpos2,
-        0.05 * height
-      );
-      pathdargument.bezierCurveTo(
-        0.85 * width + currentnightpos2,
-        0.05 * height,
-        0.85 * width + currentnightpos2,
-        0.05 * height,
-        0.85 * width + currentnightpos2,
-        0.5 * height
-      );
-      pathdargument.bezierCurveTo(
-        0.85 * width + currentnightpos2,
-        0.98 * height,
-        0.85 * width + currentnightpos2,
-        0.98 * height,
-        width + currentnightpos2,
-        0.98 * height
-      );
-
-      svg
-        .append("path")
-        .attr("d", pathdargument)
-        .attr("opacity", 0.5)
-        .attr("fill-color", "black")
-        .attr("daynight", true);
+      if (selecdaynight) {
+        // magic
+        selecdaynight.transform.baseVal
+          .getItem(0)
+          .setTranslate(currentnightpos, 0);
+      }
 
       // call on the lights check each update may be smarter to stagger with % so every 5 updates, 10% of nodes are checked for performance
-      turnonthelights();
+      turnonthelights(timecounter);
+      // before shading is redrawn
+      animatetornadoes(timecounter);
+
       // wait before update
       await delay(dayticktime);
       // console.log("Waited" + dayticktime + "ms");
@@ -1666,54 +1627,166 @@ function daynightcycler() {
     // remove last
     let selecdaynight = d3.selectAll("[daynight]");
     selecdaynight.remove();
-    turnonthelights();
+    daynight = "off";
+
+    turnonthelights(timecounter);
   };
 
   // actually start the controlled infinite loop
   daynightFunction();
 }
 
-// function drawing circle for "lights" in passable cells at night
-function turnonthelights() {
-  let newselec2 = d3.selectAll("[ispointsforlight]");
-  newselec2.remove();
-  //it works but i can't tell why ._groups[0][0]  is necessary??
-  let newselec = d3.selectAll("path" + "[daynight]")._groups[0][0];
-  let svg2 = document.getElementById("maincontainer");
-  if (newselec) {
-    // 3rd version takes only passable cells, and draw 1 path for all points
-    // random radius makes a gloow effect with the fast refresh from night moving
-    let pathjoiningpointsforlights = d3.path();
-    for (let i = 0; i < passablecelllist.length; i++) {
-      var pointObj = svg2.createSVGPoint();
-      pointObj.x = datamap[passablecelllist[i]][0];
-      pointObj.y = datamap[passablecelllist[i]][1];
-      if (newselec.isPointInFill(pointObj)) {
-        let radius = 3 + Math.round(1 * Math.random());
-        pathjoiningpointsforlights.moveTo(
-          datamap[passablecelllist[i]][0] + radius,
-          datamap[passablecelllist[i]][1]
-        );
-        pathjoiningpointsforlights.arc(
-          datamap[passablecelllist[i]][0],
-          datamap[passablecelllist[i]][1],
-          radius,
-          0,
-          2 * Math.PI
-        );
-      }
-      //console.log(svg2)
-    }
+// function to draw the shading as a svg
+function drawtheshading() {
+  // create a path for shading
+  // then this will be translated
+  // it doesn't need to have the currentnightpos updating anymore and they are 0 when the function is called just once
+  pathdargument = d3.path();
+  // drawn schematics required for understanding =>
+  // x are points designed by "beziercurveto"
+  // c are control points duplicated
+  // à represent path that slide
+  // 0 is origin or path
+  //////////////////////////////////////////////////////////////////////
+  //x.......c..ààààxàààà..c..............c..ààààxàààà..c......x.......//
+  //.........àà.........àà................àà.........àà...............//
+  //........à.............à..............à.............à..............//
+  //........x.............x..............x.............x..............//
+  //........à.............à..............à.............à..............//
+  //......àà...............àà..........àà...............àà............//
+  //xàààà...c.............c..àààà0àààà...c.............c..ààààx.......//
+  //////////////////////////////////////////////////////////////////////
+  // needlessly computationnaly expensive, but i wanted to try and use bezier curves
 
-    svg
-      .append("path")
-      .attr("d", pathjoiningpointsforlights)
-      .attr("fill", "yellow")
-      .attr("ispointsforlight", "true");
+  pathdargument.moveTo(0 + currentnightpos, 0.98 * height);
+  pathdargument.bezierCurveTo(
+    0.15 * width + currentnightpos,
+    0.98 * height,
+    0.15 * width + currentnightpos,
+    0.98 * height,
+    0.15 * width + currentnightpos,
+    0.5 * height
+  );
+  pathdargument.bezierCurveTo(
+    0.15 * width + currentnightpos,
+    0.05 * height,
+    0.15 * width + currentnightpos,
+    0.05 * height,
+    0.5 * width + currentnightpos,
+    0.05 * height
+  );
+  pathdargument.bezierCurveTo(
+    0.85 * width + currentnightpos,
+    0.05 * height,
+    0.85 * width + currentnightpos,
+    0.05 * height,
+    0.85 * width + currentnightpos,
+    0.5 * height
+  );
+  pathdargument.bezierCurveTo(
+    0.85 * width + currentnightpos,
+    0.98 * height,
+    0.85 * width + currentnightpos,
+    0.98 * height,
+    width + currentnightpos,
+    0.98 * height
+  );
+  pathdargument.lineTo(width + currentnightpos, 0);
+  pathdargument.lineTo(0 + currentnightpos2, 0);
+  pathdargument.lineTo(0 + currentnightpos2, 0.98 * height);
+  pathdargument.bezierCurveTo(
+    0.15 * width + currentnightpos2,
+    0.98 * height,
+    0.15 * width + currentnightpos2,
+    0.98 * height,
+    0.15 * width + currentnightpos2,
+    0.5 * height
+  );
+  pathdargument.bezierCurveTo(
+    0.15 * width + currentnightpos2,
+    0.05 * height,
+    0.15 * width + currentnightpos2,
+    0.05 * height,
+    0.5 * width + currentnightpos2,
+    0.05 * height
+  );
+  pathdargument.bezierCurveTo(
+    0.85 * width + currentnightpos2,
+    0.05 * height,
+    0.85 * width + currentnightpos2,
+    0.05 * height,
+    0.85 * width + currentnightpos2,
+    0.5 * height
+  );
+  pathdargument.bezierCurveTo(
+    0.85 * width + currentnightpos2,
+    0.98 * height,
+    0.85 * width + currentnightpos2,
+    0.98 * height,
+    width + currentnightpos2,
+    0.98 * height
+  );
+
+  svg
+    .append("path")
+    .attr("d", pathdargument)
+    .attr("opacity", 0.5)
+    .attr("fill-color", "black")
+    .attr("daynight", true)
+    .attr("transform", "translate(0," + currentnightpos + ")");
+}
+
+// function drawing circle for "lights" in passable cells at night
+function turnonthelights(timecounter) {
+  // stagger the update for "lights"
+
+  if (lightmode === "on") {
+    if (timecounter % 15 === 0) {
+      let newselec2 = d3.selectAll("[ispointsforlight]");
+      newselec2.remove();
+      //it works but i can't tell why ._groups[0][0]  is necessary??
+      let newselec = d3.selectAll("path" + "[daynight]")._groups[0][0];
+      let svg2 = document.getElementById("maincontainer");
+      if (newselec) {
+        // 3rd version takes only passable cells, and draw 1 path for all points
+        // random radius makes a gloow effect with the fast refresh from night moving
+        let pathjoiningpointsforlights = d3.path();
+        for (let i = 0; i < passablecelllist.length; i++) {
+          var pointObj = svg2.createSVGPoint();
+          // create fake invisible points with same offset as currentnightpos to check for collision with the translated path that represent night shading
+          pointObj.x = -currentnightpos + datamap[passablecelllist[i]][0];
+          pointObj.y = datamap[passablecelllist[i]][1];
+          if (newselec.isPointInFill(pointObj)) {
+            let radius = 3 + Math.round(1 * Math.random());
+            pathjoiningpointsforlights.moveTo(
+              datamap[passablecelllist[i]][0] + radius,
+              datamap[passablecelllist[i]][1]
+            );
+            pathjoiningpointsforlights.arc(
+              datamap[passablecelllist[i]][0],
+              datamap[passablecelllist[i]][1],
+              radius,
+              // with a different start angle it doesn't make a full circle i like the look
+              -3,
+              1
+            );
+          }
+          //console.log(svg2)
+        }
+
+        svg
+          .append("path")
+          .attr("d", pathjoiningpointsforlights)
+          .attr("fill", "yellow")
+          .attr("ispointsforlight", "true");
+      }
+      newselec = 0;
+      svg2 = 0;
+    }
+  } else {
+    let newselec2 = d3.selectAll("[ispointsforlight]");
+    newselec2.remove();
   }
-  newselec = 0;
-  svg2 = 0;
-  
 }
 
 //helper function to identify passable cell
@@ -1726,6 +1799,127 @@ function identifypassable() {
   });
 }
 
+// function to manage when to activate the tornadoes
+function tornadomanager() {
+
+  if (!aretornadoesactive) {
+    // first setup conditions for sandstorm :
+    if (!isbackgroundcoloractivated || isbackgroundcoloractivated) {
+      isbackgroundcoloractivated = true;
+      fbackgroundcolors();
+    }
+    if (impassablemode != "water" || impassablemode === "water") {
+      impassablecelllist = [];
+      let newselec = d3.selectAll('[isimpassable="yes"]');
+      newselec.remove();
+      makeallwaterimpassable();
+      identifypassable();
+      impassablemode = "water";
+      paintimpassable();
+    }
+    if (isimpassableactivated === true || isimpassableactivated != true) {
+      isimpassableactivated = false;
+      hideimpassableterrain();
+    }
+    if (landmasses) {
+      landmasses = "none";
+      landmassesmanager();
+    }
+    if (ambiantsound != "playing") {
+      ambiantsound = "playing";
+      customrepeatplay(FulgoraThunder);
+      customrepeatplay(FulgoraWind);
+    }
+
+    if (daynight === "off") {
+      daynight = "on";
+      daynightcycler();
+    } 
+
+ 
+
+    activatetornadoes();
+    aretornadoesactive = true;
+  }
+  // stop the tornadoes
+  else {
+    if (daynight==="on") {
+      daynight = "off";
+      daynightcycler();
+    };
+
+    deactivatetornadoes();
+    aretornadoesactive = false;
+  }
+}
+
+// function called before displaying tornadoes
+function activatetornadoes() {
+  // pick a definite proportion of random impassable cells  that will be spawner for the duration of the activation
+  for (element of impassablecelllist) {
+    let diceroll = 0.95 < Math.random();
+    if (diceroll === true) {
+      tornadospawner.push(element);
+    }
+  }
+}
+
+//function called to animate the tornadoes
+//the tornado look the same as the .gif but at this point it's the gif that would need improvement
+function animatetornadoes(timecounter) {
+  if (aretornadoesactive) {
+    // stagger animation
+    let staggerer = 5;
+    if (timecounter % staggerer === 0) {
+      // transform 10 20 30 40 50 60 ... 1000 into 1 1 1 2 2 2 3 3 3 4 4 4 1 1 1  ....
+      let numberofsheetfortornadoes = 4;
+      let maxnumberofimageonsheetbecauseofsvg = 3;
+      let usefulnumber1 =
+        staggerer *
+        numberofsheetfortornadoes *
+        maxnumberofimageonsheetbecauseofsvg;
+
+      let animationsheet = Math.ceil(
+        (Math.floor((timecounter % usefulnumber1) / staggerer) + 1) /
+          maxnumberofimageonsheetbecauseofsvg
+      );
+      let animationaligment = timecounter % maxnumberofimageonsheetbecauseofsvg;
+      //console.log("sheet "+animationsheet+", image "+animationaligment)
+      let alignmentorder = [
+        "xMinYMin slice",
+        "xMidYMin slice",
+        "xMaxYMin slice",
+      ];
+
+      //console.log(alignmentorder[animationaligment])
+      //"+tornadosize/2+" "+tornadosize/1.2+"
+
+      // delete old animation
+      // possible to delete by group ? for performance ?
+      let newselec = d3.selectAll("[istornado]");
+      newselec.remove();
+      for (element of tornadospawner) {
+        svg
+          .append("image")
+          .attr("istornado", true)
+          .attr("href", "pic/SandstormS" + animationsheet + ".png")
+          .attr("x", datamap[element][0] - tornadosize / 2)
+          .attr("y", datamap[element][1] - tornadosize / 1.2)
+          .attr("height", tornadosize)
+          .attr("width", tornadosize)
+          .attr("viewBox", "0 0 32 32")
+          //  .attr( "preserveAspectRatio","xMinYMin slice")
+          .attr("preserveAspectRatio", alignmentorder[animationaligment])
+          .attr("ID", tornadospawner.indexOf(element));
+      }
+    }
+  }
+}
+
+// function that remove all tornadoes and stop their spawn
+function deactivatetornadoes() {
+  tornadospawner = [];
+}
 
 // Actual beginning of the script run when the page is loaded
 

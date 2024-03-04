@@ -1,3 +1,5 @@
+// no sound by default, need be read before script
+var ambiantsound ="off";
 // Fulgora sound file list
 const FulgoraThunderfiles = [
     "sound/Thunder.mp3"  
@@ -6,6 +8,7 @@ const FulgoraThunderfiles = [
 const FulgoraWindfiles=[
     "sound/Wind.mp3"
 ];
+
 
   
   // Fulgora array storing each sound as audio
@@ -38,6 +41,7 @@ function customrepeatplay(targetArray) {
   function setCanplay(event) {
     event.target.removeEventListener("ended", setCanplay, false);
     event.target.busy = false;
-   customrepeatplay(event.target.source)
+    if( ambiantsound= "playing"){
+   customrepeatplay(event.target.source)}
   }
   
