@@ -6,7 +6,6 @@
 // While the previous is not done instead it just color the different landmasses in their own color.
 // ideas for future => give landmasses proceduraly generated name, and try to write it as label using voronoi labeling à la EUIV
 
-
 // function to find landmasses ( most time spent on a function so far)
 function findlandmasses() {
   // reset previous
@@ -78,7 +77,7 @@ function iselementincluded(element, arrayofarray, i) {
 function deleteduplicatelandmass(landmasseslist, todelete) {
   for (let i = todelete.length - 1; i >= 0; i--) {
     for (let j = landmasseslist.length - 1; j >= 0; j--) {
-        // comparing a number with an array containing only that number was difficult, why work with 2 == and not 3 ?
+      // comparing a number with an array containing only that number was difficult, why work with 2 == and not 3 ?
       if (todelete[i] == landmasseslist[j][0]) {
         //console.log("delete cell "+todelete[i]+" or so called "+landmasseslist[j][0] + " at index " + j)
         landmasseslist.splice(j, 1);
@@ -101,7 +100,7 @@ function showselectionedges() {
   for (let i = 0; i < landmasseslist.length; i++) {
     for (let j = 0; j < landmasseslist[i].length; j++) {
       let celledges = polygonizemyID(landmasseslist[i][j]);
-      console.log(celledges);
+      //console.log(celledges);
 
       for (let k = 0; k <= celledges.length - 3; k += 2) {
         console.log(k);
@@ -127,3 +126,43 @@ function showselectionedges() {
   // draw vertices
   console.log(landmassesedgelist);
 }
+
+function showlandmassescontour(landmasseslist) {
+  // ideas =>
+  // pick first landmass
+
+  // first cell
+
+  // is it outside ?
+  // does it have impassable neighbour
+  // erf some tile  don't but they are on boundary so they are outside tile
+
+  // which segment ?
+
+  // if no segment, it means we finish with a point that is also shared with a cell, that will be 2nd cell
+
+  for (let i = 0; i < landmasseslist.length; i++) {
+    for (let j = 0; j < landmasseslist[i].length; j++) {
+      let cellID = landmasseslist[i][j];
+      let neighbor = [...voronoid.neighbors(cellID)];
+      if(is1neighbournotpassable(neighbor)){
+        console.log(cellID+' is a countour tile')
+      }      
+    }
+  }
+
+  console.log(landmasseslist);
+}
+
+
+// function to test if 1 neighbour is not passable
+function is1neighbournotpassable(neighboursarray) {
+  var atleast1neighbourisnotpassable = false;
+  for (element of neighboursarray) {
+    if (!passablecelllist.includes(element)) {
+      atleast1neighbourisnotpassable = true;
+    }
+  }
+  return atleast1neighbourisnotpassable;
+}
+

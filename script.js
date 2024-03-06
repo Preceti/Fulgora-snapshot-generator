@@ -5,7 +5,9 @@
 const width = 0.98 * window.innerWidth;
 const height = 0.9 * window.innerHeight;
 //you can change this number to change the number cell at start
-const numberofcellsatstart = 1500;
+const numberofcellsatstart = 2500
+// chicken egg size definition
+//console.log(width*height)/(tornadosize²))
 //bigger number here means more land vs water
 // [0.5-1.5] are quite extreme bound already
 // 0.72 is ok for most value between 1000 and  20K points
@@ -99,7 +101,7 @@ var datamap = Array.from({ length: numberofcellsatstart }).map(() => {
   ];
 });
 
-// create delaunay triangulation for array of points
+// create delaunay triangulation from array of points
 var delaunayd = d3.Delaunay.from(datamap);
 
 //create a voronoi diagram from the previous delaunay triangulation
@@ -157,14 +159,16 @@ function clickdetector(event) {
     if (activecell != "none") {
       delete1cell();
       deletelabels();
+      
     }
     if (activecell === "none") {
       activecell = whichcell(event);
       if (activecell != previouscell) {
         draw1cell(activecell);
-        writecellID(event);
+        writecellID(event);        
       }
     }
+ 
   }
 
   // t paint all cells with a temporary overlay according to various criterions
@@ -288,6 +292,12 @@ function clickdetector(event) {
   if (keybeingpressed === "d") {
     console.log(readadjacency(datamap));
   }
+
+    // used to test new functions
+    if (keybeingpressed==="x"){
+      
+      showlandmassescontour(landmasseslist)
+    }
 }
 
 // helper function to make average
@@ -1145,310 +1155,6 @@ function smoothing(centroidcoordinatearray) {
   replacecentroids(centroidcoordinatearray);
 }
 
-//Rules manager for background colors
-function fbackgroundcolors() {
-  // first remove everything as nothing should be drawn under background
-  svg.selectAll("*").remove();
-  // then draw background if needed
-  if (isbackgroundcoloractivated === true) {
-    if (planet === Fulgoracolor) {
-      Fulgoracolorrule();
-    }
-    // redraw things once at the end, above it all as we just did background color
-    drawingbasend(delaunayd, voronoid);
-    paintimpassable();
-  }
-}
-
-// Actual rules for background colors
-// function rule for Fulgora
-function Fulgoracolorrule() {
-  // clean default tile
-  watercelllist = [];
-  icecelllist = [];
-  landcelllist = [];
-  shallowwatercelllist = [];
-  mountaincelllist = [];
-  deepwatercelllist = [];
-  hillcelllist = [];
-  bluemysterycelllist = [];
-
-  // iterate through each cell
-  for (element of datamap) {
-    // apply rules
-    // no ice on Fulgora
-    // ruleforice(element);
-    ruleforland(element, averagecellarea);
-    ruleforwater(element);
-  }
-  for (element of datamap) {
-    // it doesn't work when put in the previous loop
-    // why ? seem inefficient way to do
-    ruleformountain(element);
-  }
-  for (element of datamap) {
-    ruleforhills(element);
-  }
-  for (element of datamap) {
-    ruleforshallowwater(element);
-  }
-  for (element of datamap) {
-    rulefordeepwater(element);
-  }
-  for (element of datamap) {
-    ruleforbluemystery(element);
-  }
-
-  // draw at the end only to avoid doubles drawing that was causing worse performance before
-  for (element of datamap) {
-    dothepainting(element);
-  }
-}
-
-// function to paint the colors after rule are applied
-function dothepainting(element) {
-  if (landcelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(datamap.indexOf(element), planet.land, "land");
-  }
-  if (mountaincelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(datamap.indexOf(element), planet.mountain, "mountain");
-  }
-  if (watercelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(datamap.indexOf(element), planet.water, "water");
-  }
-  if (shallowwatercelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(
-      datamap.indexOf(element),
-      planet.shallowwater,
-      "shallowwater"
-    );
-  }
-  if (hillcelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(datamap.indexOf(element), planet.hills, "hills");
-  }
-  if (deepwatercelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(datamap.indexOf(element), planet.deepwater, "deepwater");
-  }
-  if (bluemysterycelllist.includes(datamap.indexOf(element))) {
-    paintcellfillcolor(
-      datamap.indexOf(element),
-      planet.bluemystery,
-      "bluemystery"
-    );
-  }
-}
-
-//ice
-//cells located in the 10% upper and lower part of the map are receiving "ice color"
-function ruleforice(element) {
-  if (
-    element[1] > 0.97 * height ||
-    element[1] < 0.03 * height ||
-    icecelllist.includes(datamap.indexOf(element))
-  ) {
-    paintcellfillcolor(datamap.indexOf(element), planet.ice, "ice");
-    if (!icecelllist.includes(datamap.indexOf(element))) {
-      icecelllist.push(datamap.indexOf(element));
-    }
-  } else {
-    if (icecelllist.includes(datamap.indexOf(element))) {
-      icecelllist.splice(datamap.indexOf(element), 1);
-    }
-  }
-}
-
-// land
-function ruleforland(element, averagecellarea) {
-  // amongst valid candidate
-  if (element[1] < 0.96 * height && element[1] > 0.04 * height) {
-    // exclude some for lake or mountains
-    // calculate area of the cell
-    let elementarea =
-      -1 * d3.polygonArea(polygonizemyID(datamap.indexOf(element)));
-    if (
-      elementarea < ratiotonormalcell * averagecellarea &&
-      !landcelllist.includes(datamap.indexOf(element))
-    ) {
-      landcelllist.push(datamap.indexOf(element));
-    }
-  }
-}
-
-// mountains
-function ruleformountain(element) {
-  if (
-    areallneighbourland(element) &&
-    landcelllist.includes(datamap.indexOf(element)) &&
-    !mountaincelllist.includes(datamap.indexOf(element))
-  ) {
-    mountaincelllist.push(datamap.indexOf(element));
-    landcelllist.splice(landcelllist.indexOf(datamap.indexOf(element)), 1);
-  }
-}
-
-// function to test if all neighbour are land
-function areallneighbourland(cellID) {
-  let neighboured = [...voronoid.neighbors(datamap.indexOf(cellID))];
-
-  var allneighbourareland = true;
-  for (element of neighboured) {
-    // actually hills and other mountains are also land
-    if (!landcelllist.includes(element)) {
-      if (!hillcelllist.includes(element)) {
-        if (!mountaincelllist.includes(element)) {
-          allneighbourareland = false;
-        }
-      }
-    }
-  }
-  neighboured = [];
-
-  return allneighbourareland;
-}
-
-// water is the default
-function ruleforwater(element) {
-  // some of the ice tile are turned into water, and all the empty tile too
-  if (icecelllist.includes(datamap.indexOf(element))) {
-    let diceroll = Math.random();
-    if (diceroll <= 0.3) {
-      icecelllist.splice(icecelllist.indexOf(element), 1);
-      if (!watercelllist.includes(datamap.indexOf(element))) {
-        watercelllist.push(datamap.indexOf(element));
-      }
-    }
-  } else {
-    if (!landcelllist.includes(datamap.indexOf(element))) {
-      if (!watercelllist.includes(datamap.indexOf(element))) {
-        watercelllist.push(datamap.indexOf(element));
-      }
-    }
-  }
-}
-
-// shallow water
-function ruleforshallowwater(element) {
-  // is done after water which is the fill for empty tile
-  // aim : any tile that is water and touching a coast
-  // for each neighbour check if it's land and if tile is not  already shallow water
-  if (
-    hassomelandneighbour(element) &&
-    watercelllist.includes(datamap.indexOf(element)) &&
-    !shallowwatercelllist.includes(datamap.indexOf(element))
-  ) {
-    shallowwatercelllist.push(datamap.indexOf(element));
-    watercelllist.splice(watercelllist.indexOf(datamap.indexOf(element)), 1);
-  }
-}
-
-//function to test if the cell as some land neighbour
-function hassomelandneighbour(cellID) {
-  let neighboured = [...voronoid.neighbors(datamap.indexOf(cellID))];
-
-  var hassomelandneighbour = false;
-  for (element of neighboured) {
-    if (
-      landcelllist.includes(element) ||
-      hillcelllist.includes(element) ||
-      mountaincelllist.includes(element)
-    ) {
-      hassomelandneighbour = true;
-    }
-  }
-  return hassomelandneighbour;
-}
-
-// hills
-function ruleforhills(element) {
-  // if there is a mountain neighbour a diceroll
-  // for each neighbour check if it's land and if tile is not  already shallow water
-  if (
-    hassomemountainneighbour(element) &&
-    landcelllist.includes(datamap.indexOf(element)) &&
-    !hillcelllist.includes(datamap.indexOf(element)) &&
-    !mountaincelllist.includes(datamap.indexOf(element))
-  ) {
-    hillcelllist.push(datamap.indexOf(element));
-    landcelllist.splice(landcelllist.indexOf(datamap.indexOf(element)), 1);
-  }
-  /* since no diceroll can downgrade hill or mountain, this is not necessary
-  if (
-    hillcelllist.includes(datamap.indexOf(element)) &&
-    !hassomemountainneighbour(element)
-  ) {
-    hillcelllist.splice(hillcelllist.indexOf(datamap.indexOf(element)), 1);
-    landcelllist.push(datamap.indexOf(element));
-    paintcellfillcolor(datamap.indexOf(element), planet.land, "land");
-    console.log("not useless")
-  }
-  */
-}
-
-//function to test if the cell has some mountain neighbors
-function hassomemountainneighbour(cellID) {
-  let neighboured = [...voronoid.neighbors(datamap.indexOf(cellID))];
-  var hassomemountainneighbour = false;
-  for (element of neighboured) {
-    if (mountaincelllist.includes(element)) {
-      hassomemountainneighbour = true;
-    }
-  }
-  neighboured = [];
-  return hassomemountainneighbour;
-}
-
-// deep water
-function rulefordeepwater(element) {
-  // water whose only connexion is other water
-  if (
-    areallneighbourarewater(element) &&
-    watercelllist.includes(datamap.indexOf(element)) &&
-    !deepwatercelllist.includes(datamap.indexOf(element))
-  ) {
-    deepwatercelllist.push(datamap.indexOf(element));
-    watercelllist.splice(watercelllist.indexOf(datamap.indexOf(element)), 1);
-  }
-}
-
-// function to test if all neighbour are water
-function areallneighbourarewater(element) {
-  let neighboured = [...voronoid.neighbors(datamap.indexOf(element))];
-  let allneighbourarewater = true;
-  for (element of neighboured) {
-    if (
-      !watercelllist.includes(element) &&
-      !deepwatercelllist.includes(element)
-    ) {
-      allneighbourarewater = false;
-    }
-  }
-  neighboured = [];
-  return allneighbourarewater;
-}
-
-// function for the bluemystery
-function ruleforbluemystery(element) {
-  if (
-    mountaincelllist.includes(datamap.indexOf(element)) ||
-    hillcelllist.includes(datamap.indexOf(element))
-  ) {
-    let diceroll = Math.random();
-    if (mountaincelllist.includes(datamap.indexOf(element))) {
-      if (diceroll <= 0.3) {
-        bluemysterycelllist.push(datamap.indexOf(element));
-        mountaincelllist.splice(
-          mountaincelllist.indexOf(datamap.indexOf(element)),
-          1
-        );
-      }
-    } else {
-      if (diceroll <= 0.1) {
-        bluemysterycelllist.push(datamap.indexOf(element));
-        hillcelllist.splice(hillcelllist.indexOf(datamap.indexOf(element)), 1);
-      }
-    }
-  }
-}
 
 // function to remove all background colors
 function removebackgroundcolors() {
@@ -1556,84 +1262,6 @@ function showlandmasses() {
 function hidelandmasses() {
   let newselec = d3.selectAll("[islandmassoverlay]");
   newselec.remove();
-}
-
-// function to draw the night/day cycle
-function daynightcycler() {
-  // start with recent list not updated for performance
-  identifypassable();
-
-  timecounter = 0;
-
-  // time of a day in second
-  let daynightcycletime = 30;
-  // time between each update in millisec
-  // 16 for 60 fps
-  // for some reason it becomes almost impossible to click a cell in night when the refresh is not visibly slow
-  let dayticktime = 16;
-  // amount of space to move the overlay each update
-  let baseoffset = width / ((daynightcycletime * 1000) / dayticktime);
-
-  // set the time waiting between 2 updates
-  let delay = (ms) => new Promise((res) => setTimeout(res, ms));
-
-  //calculate position and size based on user browser window
-  currentnightpos = 0;
-  currentnightpos2 = (currentnightpos - width);
-
-  // draw a shade shape that will slide to represent nightcycle
-  drawtheshading();
-
-  // defining this svg as the selection to be translated
-  // magic
-  var selecdaynight = d3.selectAll("[daynight]")._groups[0][0];
-  var xforms = selecdaynight.transform.baseVal;
-  var firstXForm = xforms.getItem(0);
-
-  let daynightFunction = async () => {
-    // repeat unless toggled off
-    while (daynight === "on") {
-      timecounter = (timecounter + 1) % 1000;
-
-      lightmode = "on";
-      // why this need be here ?
-      let selecdaynight = d3.selectAll("[daynight]")._groups[0][0];
-      // update position
-      currentnightpos = (currentnightpos + baseoffset) % width;
-      currentnightpos2 = currentnightpos - width;
-
-      // magic
-      if (firstXForm.type == SVGTransform.SVG_TRANSFORM_TRANSLATE) {
-        var firstX = firstXForm.matrix.e,
-          firstY = firstXForm.matrix.f;
-      }
-
-      if (selecdaynight) {
-        // magic
-        selecdaynight.transform.baseVal
-          .getItem(0)
-          .setTranslate(currentnightpos, 0);
-      }
-
-      // call on the lights check each update may be smarter to stagger with % so every 5 updates, 10% of nodes are checked for performance
-      turnonthelights(timecounter);
-      // before shading is redrawn
-      animatetornadoes(timecounter);
-
-      // wait before update
-      await delay(dayticktime);
-      // console.log("Waited" + dayticktime + "ms");
-    }
-    // remove last
-    let selecdaynight = d3.selectAll("[daynight]");
-    selecdaynight.remove();
-    daynight = "off";
-
-    turnonthelights(timecounter);
-  };
-
-  // actually start the controlled infinite loop
-  daynightFunction();
 }
 
 // function to draw the shading as a svg
@@ -1799,126 +1427,75 @@ function identifypassable() {
   });
 }
 
-// function to manage when to activate the tornadoes
-function tornadomanager() {
 
-  if (!aretornadoesactive) {
-    // first setup conditions for sandstorm :
-    if (!isbackgroundcoloractivated || isbackgroundcoloractivated) {
-      isbackgroundcoloractivated = true;
-      fbackgroundcolors();
-    }
-    if (impassablemode != "water" || impassablemode === "water") {
-      impassablecelllist = [];
-      let newselec = d3.selectAll('[isimpassable="yes"]');
-      newselec.remove();
-      makeallwaterimpassable();
-      identifypassable();
-      impassablemode = "water";
-      paintimpassable();
-    }
-    if (isimpassableactivated === true || isimpassableactivated != true) {
-      isimpassableactivated = false;
-      hideimpassableterrain();
-    }
-    if (landmasses) {
-      landmasses = "none";
-      landmassesmanager();
-    }
-    if (ambiantsound != "playing") {
-      ambiantsound = "playing";
-      customrepeatplay(FulgoraThunder);
-      customrepeatplay(FulgoraWind);
-    }
+// function to draw the night/day cycle
+// that's probably not how one should do an update loop, but for now it do the job
+function daynightcycler() {
+  // reset time
+  timecounter = 0;
+  // time of a day in second
+  let daynightcycletime = 30;
+  // time between each update in millisec (16 for 60 fps)
+  let dayticktime = 16;
+  // start with recent list not updated for performance
+  identifypassable();
+  // amount of space to move the overlay each update
+  let baseoffset = width / ((daynightcycletime * 1000) / dayticktime);
 
-    if (daynight === "off") {
-      daynight = "on";
-      daynightcycler();
-    } 
+  // set the time waiting between 2 updates
+  let delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
- 
-
-    activatetornadoes();
-    aretornadoesactive = true;
-  }
-  // stop the tornadoes
-  else {
-    if (daynight==="on") {
-      daynight = "off";
-      daynightcycler();
-    };
-
-    deactivatetornadoes();
-    aretornadoesactive = false;
-  }
-}
-
-// function called before displaying tornadoes
-function activatetornadoes() {
-  // pick a definite proportion of random impassable cells  that will be spawner for the duration of the activation
-  for (element of impassablecelllist) {
-    let diceroll = 0.95 < Math.random();
-    if (diceroll === true) {
-      tornadospawner.push(element);
-    }
-  }
-}
-
-//function called to animate the tornadoes
-//the tornado look the same as the .gif but at this point it's the gif that would need improvement
-function animatetornadoes(timecounter) {
-  if (aretornadoesactive) {
-    // stagger animation
-    let staggerer = 5;
-    if (timecounter % staggerer === 0) {
-      // transform 10 20 30 40 50 60 ... 1000 into 1 1 1 2 2 2 3 3 3 4 4 4 1 1 1  ....
-      let numberofsheetfortornadoes = 4;
-      let maxnumberofimageonsheetbecauseofsvg = 3;
-      let usefulnumber1 =
-        staggerer *
-        numberofsheetfortornadoes *
-        maxnumberofimageonsheetbecauseofsvg;
-
-      let animationsheet = Math.ceil(
-        (Math.floor((timecounter % usefulnumber1) / staggerer) + 1) /
-          maxnumberofimageonsheetbecauseofsvg
-      );
-      let animationaligment = timecounter % maxnumberofimageonsheetbecauseofsvg;
-      //console.log("sheet "+animationsheet+", image "+animationaligment)
-      let alignmentorder = [
-        "xMinYMin slice",
-        "xMidYMin slice",
-        "xMaxYMin slice",
-      ];
-
-      //console.log(alignmentorder[animationaligment])
-      //"+tornadosize/2+" "+tornadosize/1.2+"
-
-      // delete old animation
-      // possible to delete by group ? for performance ?
-      let newselec = d3.selectAll("[istornado]");
-      newselec.remove();
-      for (element of tornadospawner) {
-        svg
-          .append("image")
-          .attr("istornado", true)
-          .attr("href", "pic/SandstormS" + animationsheet + ".png")
-          .attr("x", datamap[element][0] - tornadosize / 2)
-          .attr("y", datamap[element][1] - tornadosize / 1.2)
-          .attr("height", tornadosize)
-          .attr("width", tornadosize)
-          .attr("viewBox", "0 0 32 32")
-          //  .attr( "preserveAspectRatio","xMinYMin slice")
-          .attr("preserveAspectRatio", alignmentorder[animationaligment])
-          .attr("ID", tornadospawner.indexOf(element));
+  //calculate position and size based on user browser window
+  currentnightpos = 0;
+  currentnightpos2 = currentnightpos - width;
+  var daynightFunction = async () => {
+    // repeat unless toggled off
+    while (daynight === "on") {
+      timecounter = (timecounter + 1) % 1000;
+      lightmode = "on";
+      // update position
+      currentnightpos = (currentnightpos + baseoffset) % width;
+      currentnightpos2 = currentnightpos - width;
+      // magic
+      // why this need be here ?
+      let selecdaynight = d3.selectAll("[daynight]")._groups[0][0];
+      if (firstXForm.type == SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+        var firstX = firstXForm.matrix.e,
+          firstY = firstXForm.matrix.f;
       }
-    }
-  }
-}
+      if (selecdaynight) {
+        selecdaynight.transform.baseVal
+          .getItem(0)
+          .setTranslate(currentnightpos, 0);
+      }
 
-// function that remove all tornadoes and stop their spawn
-function deactivatetornadoes() {
-  tornadospawner = [];
+      // call on the lights check each update may be smarter to stagger with % so every 5 updates, 10% of nodes are checked for performance
+      turnonthelights(timecounter);
+      animatetornadoes(timecounter);
+      // wait before update
+      await delay(dayticktime);
+      // console.log("Waited" + dayticktime + "ms");
+    }
+
+    // remove last
+    let selecdaynight = d3.selectAll("[daynight]");
+    selecdaynight.remove();
+    daynight = "off";
+    lightmode = "off";
+    turnonthelights(timecounter);
+  };
+
+  // draw a shade shape that will slide to represent nightcycle
+  drawtheshading();
+
+  // defining this svg as the selection to be translated
+  // magic
+  var selecdaynight = d3.selectAll("[daynight]")._groups[0][0];
+  var xforms = selecdaynight.transform.baseVal;
+  var firstXForm = xforms.getItem(0);
+
+  // actually start the controlled infinite loop
+  daynightFunction();
 }
 
 // Actual beginning of the script run when the page is loaded
