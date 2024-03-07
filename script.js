@@ -41,6 +41,8 @@ var faketau = Math.floor(100 * tau) / 100;
 var fakertau = 6;
 var aretornadoesactive = false;
 var tornadospawner = [];
+var tornadoprespawner =[];
+var tornadopostspawner =[];
 var tornadoanimationframe = 12;
 var timecounter = 0;
 var averagecellarea = (height * width) / numberofcellsatstart;
@@ -542,7 +544,7 @@ function paintallcellbasedontheirneighbournumber() {
         color = "Bisque";
         break;
       case 8:
-        color = "LightSalmon";
+        color = "Tan";
         break;
       case 9:
         color = "Coral";
@@ -1451,7 +1453,7 @@ function daynightcycler() {
   var daynightFunction = async () => {
     // repeat unless toggled off
     while (daynight === "on") {
-      timecounter = (timecounter + 1) % 1000;
+      timecounter = (timecounter + 1) % 1000000;
       lightmode = "on";
       // update position
       currentnightpos = (currentnightpos + baseoffset) % width;
