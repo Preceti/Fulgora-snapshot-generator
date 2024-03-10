@@ -5,7 +5,7 @@
 const width = 0.98 * window.innerWidth;
 const height = 0.9 * window.innerHeight;
 //you can change this number to change the number cell at start
-const numberofcellsatstart = 2500
+const numberofcellsatstart = 1500
 // chicken egg size definition
 //console.log(width*height)/(tornadosize²))
 //bigger number here means more land vs water
@@ -43,6 +43,7 @@ var aretornadoesactive = false;
 var tornadospawner = [];
 var tornadoprespawner =[];
 var tornadopostspawner =[];
+var tornadoprecaster =[];
 var tornadoanimationframe = 12;
 var timecounter = 0;
 var averagecellarea = (height * width) / numberofcellsatstart;
@@ -95,13 +96,16 @@ const Earthcolor = {
 
 // var to change the color palette
 var planet = Fulgoracolor;
-// random data to illustrate
+
+// random data to illustrate basic 
 var datamap = Array.from({ length: numberofcellsatstart }).map(() => {
   return [
     Math.round(width * Math.random()),
     Math.round(height * Math.random()),
   ];
 });
+
+
 
 // create delaunay triangulation from array of points
 var delaunayd = d3.Delaunay.from(datamap);
@@ -135,6 +139,8 @@ function clickdetector(event) {
   if (keybeingpressed === "a") {
     newpoints(event);
     drawingbase(delaunayd, voronoid);
+    daynight="off";
+    aretornadoesactive=false; 
     if (isbackgroundcoloractivated === true) {
       fbackgroundcolors();
     }
@@ -145,9 +151,12 @@ function clickdetector(event) {
     drawallcentroids();
     replacecentroids(centroidcoordinatearray);
     graph = makegraph(datamap);
+    daynight="off";
+    aretornadoesactive=false;
     if (isbackgroundcoloractivated == true) {
       fbackgroundcolors();
     }
+
   }
 
   // e paint an overlay on the cell to show it has been made "impassable terrain"
@@ -300,6 +309,17 @@ function clickdetector(event) {
       
       showlandmassescontour(landmasseslist)
     }
+        // used to test new functions
+        if (keybeingpressed==="c"){      
+          
+          if (daynight === "on") {
+            daynight = "off";
+            daynightcycler();
+            deactivatetornadoes();
+          }
+          cyclerandomdistrib();
+         
+        }
 }
 
 // helper function to make average
@@ -1453,11 +1473,13 @@ function daynightcycler() {
   var daynightFunction = async () => {
     // repeat unless toggled off
     while (daynight === "on") {
+
       timecounter = (timecounter + 1) % 1000000;
       lightmode = "on";
       // update position
       currentnightpos = (currentnightpos + baseoffset) % width;
       currentnightpos2 = currentnightpos - width;
+
       // magic
       // why this need be here ?
       let selecdaynight = d3.selectAll("[daynight]")._groups[0][0];
@@ -1470,10 +1492,10 @@ function daynightcycler() {
           .getItem(0)
           .setTranslate(currentnightpos, 0);
       }
+           // call on the lights check each update may be smarter to stagger with % so every 5 updates, 10% of nodes are checked for performance
+           turnonthelights(timecounter);
+           animatetornadoes(timecounter);
 
-      // call on the lights check each update may be smarter to stagger with % so every 5 updates, 10% of nodes are checked for performance
-      turnonthelights(timecounter);
-      animatetornadoes(timecounter);
       // wait before update
       await delay(dayticktime);
       // console.log("Waited" + dayticktime + "ms");
@@ -1484,6 +1506,7 @@ function daynightcycler() {
     selecdaynight.remove();
     daynight = "off";
     lightmode = "off";
+    aretornadoesactive ="off";
     turnonthelights(timecounter);
   };
 
