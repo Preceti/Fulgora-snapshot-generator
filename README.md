@@ -1,6 +1,6 @@
 /!\I have no idea what i'm doing/!\
 
-TL:DR=>  press "f" and click once on the background for the "full" thing
+TL:DR=>  press "f" and click once on the background for the "full" thing now with lightning bolt
 
 pressing "a" and clicking add points 
 
@@ -31,3 +31,5 @@ you can cycle through other overlay pressing "t" and clicking, blue is cell area
 "g" will start showing the day and night cycle for the planet , cells not impassable when activated have a little light shining now
 
 if "u" is the first key activated, it removes all points, allowing only manually placed points to be visible
+
+pressing "c" and clicking will regenerate the initial data cycling through different functions, untested if not used prior to the others /!\
