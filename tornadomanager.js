@@ -35,7 +35,6 @@ function tornadomanager() {
     }
     // put some cellID in the list of cell that are spawning a tornado for init
     repopulatetornadoes();
-
     aretornadoesactive = true;
   }
   // stop the tornadoes
@@ -46,7 +45,6 @@ function tornadomanager() {
     }
 
     deactivatetornadoes();
-    
   }
 }
 
@@ -70,10 +68,10 @@ function repopulatetornadoes() {
       if (newselec.isPointInFill(pointObj)) {
         // if so there is a chance to spawn a tornado
         diceroll = Math.random();
-        if (diceroll <= 0.05) {
+        if (diceroll <= 0.02) {
           // if so it can be either a S-class tornado or a T-class baby tornado which correspond to different sprite sheet
-          let secondroll = Math.round(2 * Math.random());
-          if (secondroll > 0.5) {
+          let secondroll = Math.floor(2 * Math.random());
+          if (secondroll > 1) {
             tornadoprespawner.push([impassablecelllist[i], 9, "S"]);
           } else {
             tornadoprespawner.push([impassablecelllist[i], 9, "T"]);
@@ -126,7 +124,6 @@ function promotebabytornado() {
 function promotetocaster() {
   let svg2 = document.getElementById("maincontainer");
   let newselec = d3.selectAll("path" + "[daynight]")._groups[0][0];
-
   for (let i = 0; i < tornadospawner.length; i++) {
     let diceroll = Math.random();
     if (diceroll > 0.97) {
@@ -140,7 +137,6 @@ function promotetocaster() {
 
       if (!istornadoacaster) {
         // Check if the current tornado is still at night
-
         let pointObj = svg2.createSVGPoint();
         pointObj.x = -currentnightpos + datamap[tornadospawner[i]][0];
         pointObj.y = datamap[tornadospawner[i]][1];
@@ -169,31 +165,32 @@ function retireoldtornado() {
 // attempt at keeping thing here purely cosmetic
 //the tornado look the same as the .gif but at this point it's the gif that would need improvement
 function animatetornadoes(timecounter) {
-  if (aretornadoesactive===true){
- 
-  // stagger animation
-  let staggerer = 5;
+  if (aretornadoesactive === true) {
+    // stagger animation
+    let staggerer = 5;
 
-  // update the state of tornado relative to their age for night time
-  if (timecounter % 100 === 0) {
-    repopulatetornadoes();
-  }
-  // update the state of adult tornado a bit more often to make lightning more sudden
+    // update the state of tornado relative to their age for night time
+    if (timecounter % 100 === 0) {
+      repopulatetornadoes();
+    }
+    // update the state of adult tornado a bit more often to make lightning more sudden
 
-  // update the animation of tornado
-  if (timecounter % staggerer === 0) {
-    promotebabytornado();
-    retireoldtornado();
-    promotetocaster();
+    // update the animation of tornado
+    if (timecounter % staggerer === 0) {
+      promotebabytornado();
+      retireoldtornado();
+      promotetocaster();
 
-    // function of animation
-    at_bbtornado(timecounter, staggerer);
-    at_tornado(timecounter, staggerer);
-    at_castertornado();
-    at_oldtornado(timecounter, staggerer);
+      // function of animation
+      at_bbtornado(timecounter, staggerer);
+      at_tornado(timecounter, staggerer);
+      at_castertornado();
+      at_lightning();
+      at_thunderstruck();
+      at_oldtornado(timecounter, staggerer);
 
-    // explanations
-    /*let alignmentorder = [
+      // explanations
+      /*let alignmentorder = [
       "xMinYMin slice",
       "xMidYMin slice",
       "xMaxYMin slice",
@@ -234,13 +231,12 @@ function animatetornadoes(timecounter) {
   
   
         */
+    } else if (timecounter % Math.floor(staggerer / 2) === 0) {
+      at_castertornado();
+      at_lightning();
+    }
   }
-
-
-  if (timecounter %  Math.floor(staggerer/2) === 0) {  
-    at_castertornado();
-  }
-}}
+}
 
 // function used to update the drawing of the baby tornadoo
 function at_bbtornado(timecounter, staggerer) {
@@ -495,8 +491,8 @@ function at_castertornado() {
       .attr("iscastingtornado", true)
       .attr("href", "pic/BbLightningS" + casteranimationsheet + ".png")
       .attr("x", datamap[element4[0]][0] - tornadosize / 2)
-      // make the lighting appear at the head not feet of tornado otherwise it look ridiculous
-      .attr("y", datamap[element4[0]][1] - 1.2*tornadosize )
+      // make the lightning appear at the head not feet of tornado otherwise it look ridiculous
+      .attr("y", datamap[element4[0]][1] - 1.2 * tornadosize)
       .attr("height", tornadosize)
       .attr("width", tornadosize)
       .attr("viewBox", "0 0 32 32")
@@ -506,11 +502,210 @@ function at_castertornado() {
       .attr("frameleft", element4[1] - 1)
       .attr("ID", tornadoprecaster.indexOf(element4));
   }
+
+  // this promote the charging bolts into lightning when its animation is finished
   for (element4 of tornadoprecaster) {
     if (element4[1] < 0) {
+      // the lightning will try to hit a neighbour cell or a cell neighbour to neighbour
+      let neighbor = [...voronoid.neighbors(element4[0])];
+      for (let i = neighbor.length - 1; i >= 0; i--) {
+        let topush = [...voronoid.neighbors(neighbor[i])];
+        neighbor.push(topush[i]);
+        topush = [];
+      }
+      let diceroll = Math.floor(neighbor.length * Math.random());
+      // push the target after the ID of the cell and the number of frame of animation (8 = 012345678)
+      // sometimes doesn't work ?
+      if (neighbor[diceroll] != undefined) {
+        // make sure it isn't already casting a lightning
+
+        let isalreadycasting = false;
+        for (let j = 0; j < lightningcasted.length; j++) {
+          if (element4[0] == lightningcasted[j][0]) {
+            isalreadycasting = true;
+          }
+        }
+
+        if (!isalreadycasting) {
+          // test other animation
+          // aim is to make lightning appear fast, yet let time to see where it landed when it did
+          // result is disappointing
+          let otherdiceroll = Math.random();
+          if (otherdiceroll <= 0.3) {
+            lightningcasted.push([element4[0], 14, neighbor[diceroll], "T"]);
+          }
+          if (otherdiceroll >= 0.7) {
+            lightningcasted.push([element4[0], 14, neighbor[diceroll], "S"]);
+          }
+          if (!(otherdiceroll <= 0.3) && !(otherdiceroll >= 0.7)) {
+            lightningcasted.push([element4[0], 14, neighbor[diceroll], "U"]);
+          }
+        }
+      }
+
       tornadoprecaster.splice(tornadoprecaster.indexOf(element4), 1);
     }
   }
+}
+
+//function used to animate lightning
+function at_lightning() {
+  // much time spent to rotate the lightning while not breaking this :
+  let alignmentorder = ["xMinYMin slice", "xMidYMin slice", "xMaxYMin slice"];
+  // remove image and their container
+  let newselec5 = d3.selectAll("[islightning]");
+  newselec5.remove();
+
+  for (element5 of lightningcasted) {
+    //create a container svgL to help manage the rotation
+    var svgL = d3
+      .create("svg")
+      .attr("id", "svgL")
+      .attr("islightning", true)
+      .attr("x", datamap[element5[2]][0] - 1.2 * tornadosize)
+      .attr("y", datamap[element5[2]][1] - 1.9 * tornadosize)
+      .attr("height", 2.8 * tornadosize)
+      .attr("width", 2.8 * tornadosize);
+    maincontainer.append(svgL.node());
+
+    // how many frame before end ?
+    switch (15 - element5[1]) {
+      case 15:
+        lightninganimationsheet = 3;
+        lightningaligment = 2;
+        break;
+
+      case 14:
+        lightninganimationsheet = 3;
+        lightningaligment = 2;
+        break;
+      case 13:
+        lightninganimationsheet = 3;
+        lightningaligment = 2;
+        break;
+      case 12:
+        lightninganimationsheet = 3;
+        lightningaligment = 2;
+        break;
+
+      case 11:
+        lightninganimationsheet = 3;
+        lightningaligment = 2;
+        break;
+      case 10:
+        lightninganimationsheet = 3;
+        lightningaligment = 1;
+        break;
+
+      case 9:
+        lightninganimationsheet = 3;
+        lightningaligment = 2;
+        break;
+      case 8:
+        lightninganimationsheet = 3;
+        lightningaligment = 1;
+        break;
+      case 7:
+        lightninganimationsheet = 3;
+        lightningaligment = 0;
+        break;
+      case 6:
+        lightninganimationsheet = 2;
+        lightningaligment = 2;
+        break;
+      case 5:
+        lightninganimationsheet = 2;
+        lightningaligment = 1;
+        break;
+      case 4:
+        lightninganimationsheet = 2;
+        lightningaligment = 0;
+        break;
+      case 3:
+        lightninganimationsheet = 1;
+        lightningaligment = 2;
+        break;
+      case 2:
+        lightninganimationsheet = 1;
+        lightningaligment = 1;
+        break;
+      case 1:
+        lightninganimationsheet = 1;
+        lightningaligment = 0;
+        break;
+    }
+    //console.log((15-element5[1]))
+    // create an lightning strike
+    element5[1] -= 1;
+
+    svgL
+      .append("image")
+      // Maybe this will work when inside a container ?
+      // .attr("viewBox", "0 0 32 244")
+      //.attr("transform","matrix(1 0 0 0 1 0)")
+      // This work, but meh
+      //.attr("transform","translate("+(0.5*tornadosize)+" 0)rotate(90 0 "+(1.5*tornadosize)+")scale(1 1)")
+      // Maybe consider aligning the images on spritesheet instead of trying to find a rotation point that wouldn't break horribly everything else
+      .attr(
+        "transform",
+        "translate(" +
+          0.5 * tornadosize +
+          "" +
+          -0.5 * tornadosize +
+          ")rotate(90 0 " +
+          1.5 * tornadosize +
+          ")scale(1 1)"
+      )
+      .attr("image-rendering", "pixelated")
+      .attr("image-rendering", "crisp-edges")
+      .attr("islightning", true)
+      .attr(
+        "href",
+        "pic/LLightning" + element5[3] + "" + lightninganimationsheet + ".png"
+      )
+      .attr("height", 1.4 * tornadosize)
+      .attr("width", 1.4 * tornadosize)
+      .attr("preserveAspectRatio", alignmentorder[lightningaligment]);
+    // used for debug
+    //.attr("frameleft", element5[1] - 1);
+  }
+
+  for (element5 of lightningcasted) {
+    if (element5[1] < 0) {
+      lightningcasted.splice(lightningcasted.indexOf(element5), 1);
+      thunderstruck.push([element5[2], 0]);
+    }
+  }
+}
+
+//function used to highlight cell that got hit by lightning
+function at_thunderstruck() {
+  // remove older
+  let newselec6 = d3.selectAll("[isthunderstruck]");
+  newselec6.remove();
+  let paththunderstruck = d3.path();
+  for (let i = thunderstruck.length - 1; i >= 0; i--) {
+    thunderstruck[i][1] += 1;
+    // those are created with a [1] of 0 and the number here is the amount of update they are visible
+    if (thunderstruck[i][1] >= 20) {
+      thunderstruck.splice(i, 1);
+    } else {
+      let polygon = voronoid.cellPolygon(thunderstruck[i][0]);
+      paththunderstruck.moveTo(polygon[0][0], polygon[0][1]);
+      for (let j = 1; j < polygon.length - 1; j++) {
+        paththunderstruck.lineTo(polygon[j][0], polygon[j][1]);
+      }
+    }
+  }
+  svg
+    .append("path")
+    .attr("d", paththunderstruck)
+    .attr("isthunderstruck", true)
+    .attr("fill-opacity", 0.2)
+    .attr("fill", "white");
+  //.attr("opacity", 1)
+  //.attr("stroke", "white")
+  //.attr("stroke-width", 1);
 }
 
 // function that remove all tornadoes and stop their spawn

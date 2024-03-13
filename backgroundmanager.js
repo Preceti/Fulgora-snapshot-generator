@@ -2,6 +2,7 @@
 function fbackgroundcolors() {
     // first remove everything as nothing should be drawn under background
     svg.selectAll("*").remove();
+    daynight="off";
     // then draw background if needed
     if (isbackgroundcoloractivated === true) {
       if (planet === Fulgoracolor) {
@@ -52,42 +53,40 @@ function fbackgroundcolors() {
       ruleforbluemystery(element);
     }
   
-    // draw at the end only to avoid doubles drawing that was causing worse performance before
-    for (element of datamap) {
-      dothepainting(element);
-    }
+
+    // drawn at the end only 1 path per color although not the most optimal path
+    dothepainting(planet);
+
+
   }
   
-  // function to paint the colors after rule are applied
-  function dothepainting(element) {
-    if (landcelllist.includes(datamap.indexOf(element))) {
-      paintcellfillcolor(datamap.indexOf(element), planet.land, "land");
-    }
-    if (mountaincelllist.includes(datamap.indexOf(element))) {
-      paintcellfillcolor(datamap.indexOf(element), planet.mountain, "mountain");
-    }
-    if (watercelllist.includes(datamap.indexOf(element))) {
-      paintcellfillcolor(datamap.indexOf(element), planet.water, "water");
-    }
-    if (shallowwatercelllist.includes(datamap.indexOf(element))) {
-      paintcellfillcolor(
-        datamap.indexOf(element),
-        planet.shallowwater,
-        "shallowwater"
-      );
-    }
-    if (hillcelllist.includes(datamap.indexOf(element))) {
-      paintcellfillcolor(datamap.indexOf(element), planet.hills, "hills");
-    }
-    if (deepwatercelllist.includes(datamap.indexOf(element))) {
-      paintcellfillcolor(datamap.indexOf(element), planet.deepwater, "deepwater");
-    }
-    if (bluemysterycelllist.includes(datamap.indexOf(element))) {
-      paintcellfillcolor(
-        datamap.indexOf(element),
-        planet.bluemystery,
-        "bluemystery"
-      );
+
+  // better function to paint the colors after rules are applied
+  // 1 path per background color performance test 
+  function dothepainting(planet){
+    if (planet === Fulgoracolor){
+      // should be in the same order than the color in colorbject associated with the planet
+      let Fulgorabackground =[deepwatercelllist,watercelllist,shallowwatercelllist,hillcelllist,landcelllist,mountaincelllist,bluemysterycelllist]
+      let init = [];
+      // for each cell list
+      for (let i=0;i<Fulgorabackground.length;i++){
+        // remove previous
+        let newpath = 0;
+        // create new
+         newpath= d3.path();        
+        // for each cell of the list
+        for (let j=0;j<Fulgorabackground[i].length;j++){
+          let polygon = polygonizemyID(Fulgorabackground[i][j])
+          newpath.moveTo(polygon[0][0],polygon[0][1])
+          // for each subsquent point of the list
+          for ( let k=1;k<polygon.length-1;k++){
+            newpath.lineTo(polygon[k][0],polygon[k][1])
+          }
+        }
+        init.push(newpath)
+      }
+    
+      paintallcellfillcolor(Fulgoracolor,init)
     }
   }
   

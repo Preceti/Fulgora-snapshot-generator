@@ -5,9 +5,7 @@
 const width = 0.98 * window.innerWidth;
 const height = 0.9 * window.innerHeight;
 //you can change this number to change the number cell at start
-const numberofcellsatstart = 1500
-// chicken egg size definition
-//console.log(width*height)/(tornadosize²))
+const numberofcellsatstart = 1500;
 //bigger number here means more land vs water
 // [0.5-1.5] are quite extreme bound already
 // 0.72 is ok for most value between 1000 and  20K points
@@ -41,9 +39,11 @@ var faketau = Math.floor(100 * tau) / 100;
 var fakertau = 6;
 var aretornadoesactive = false;
 var tornadospawner = [];
-var tornadoprespawner =[];
-var tornadopostspawner =[];
-var tornadoprecaster =[];
+var tornadoprespawner = [];
+var tornadopostspawner = [];
+var tornadoprecaster = [];
+var lightningcasted = [];
+var thunderstruck = [];
 var tornadoanimationframe = 12;
 var timecounter = 0;
 var averagecellarea = (height * width) / numberofcellsatstart;
@@ -67,6 +67,24 @@ var bluemysterycelllist = [];
 
 // color from factorio Fulgora planet
 const Fulgoracolor = {
+  colornames: [
+    "deepwater",
+    "water",
+    "shallowwater",
+    "hills",
+    "land",
+    "mountain",
+    "bluemystery",
+  ],
+  colorscheme: [
+    "#3a2029",
+    "#4a2829",
+    "#987954",
+    "#734131",
+    "#845542",
+    "#737974",
+    "#006299",
+  ],
   //deepwater = "sand deep"
   deepwater: "#3a2029",
   //water = "sandshallow"
@@ -97,15 +115,13 @@ const Earthcolor = {
 // var to change the color palette
 var planet = Fulgoracolor;
 
-// random data to illustrate basic 
+// random data to illustrate basic
 var datamap = Array.from({ length: numberofcellsatstart }).map(() => {
   return [
     Math.round(width * Math.random()),
     Math.round(height * Math.random()),
   ];
 });
-
-
 
 // create delaunay triangulation from array of points
 var delaunayd = d3.Delaunay.from(datamap);
@@ -130,197 +146,6 @@ d3.selectAll("*").on("keydown", function (event) {
 d3.selectAll("*").on("keyup", function () {
   keybeingpressed = null;
 });
-
-// click detector
-// letters are used to call function for now
-//  First part of the list draw on map
-function clickdetector(event) {
-  //a call the function to add a new point
-  if (keybeingpressed === "a") {
-    newpoints(event);
-    drawingbase(delaunayd, voronoid);
-    daynight="off";
-    aretornadoesactive=false; 
-    if (isbackgroundcoloractivated === true) {
-      fbackgroundcolors();
-    }
-  }
-
-  // z smooth the graph
-  if (keybeingpressed === "z") {
-    drawallcentroids();
-    replacecentroids(centroidcoordinatearray);
-    graph = makegraph(datamap);
-    daynight="off";
-    aretornadoesactive=false;
-    if (isbackgroundcoloractivated == true) {
-      fbackgroundcolors();
-    }
-
-  }
-
-  // e paint an overlay on the cell to show it has been made "impassable terrain"
-  if (keybeingpressed === "e") {
-    markimpassable(whichcell(event));
-  }
-
-  // r highlight edges of clicked cell and write its ID
-  if (keybeingpressed === "r") {
-    let previouscell = activecell;
-    if (activecell != "none") {
-      delete1cell();
-      deletelabels();
-      
-    }
-    if (activecell === "none") {
-      activecell = whichcell(event);
-      if (activecell != previouscell) {
-        draw1cell(activecell);
-        writecellID(event);        
-      }
-    }
- 
-  }
-
-  // t paint all cells with a temporary overlay according to various criterions
-  if (keybeingpressed === "t") {
-    overlaymanager();
-  }
-
-  //y draw all centroids
-  if (keybeingpressed === "y") {
-    drawallcentroids();
-  }
-
-  //u replace earlier random points with new centroids and redo the voronoi diagram
-  if (keybeingpressed === "u") {
-    replacecentroids(centroidcoordinatearray);
-  }
-
-  //i draw a road to neighbouring cell
-  if (keybeingpressed === "i") {
-    drawroadtoneighbour(whichcell(event));
-  }
-
-  //o first select a cell as origin, then second click draw path from origin to target
-  // lazy optimist
-  if (keybeingpressed === "o") {
-    pathfindclicker(whichcell(event));
-  }
-
-  //p first select a cell as origin, then second click draw path from origin to target
-  // graph attempt
-  if (keybeingpressed === "p") {
-    pathfindclicker2(whichcell(event));
-  }
-
-  //m first select a cell as origin, then second click draw path from origin to target
-  // graph attempt
-  if (keybeingpressed === "m") {
-    pathfindclicker3(whichcell(event));
-  }
-
-  // l to draw background colors
-  if (keybeingpressed === "l") {
-    if (isbackgroundcoloractivated === true) {
-      isbackgroundcoloractivated = false;
-      removebackgroundcolors();
-    } else {
-      isbackgroundcoloractivated = true;
-      fbackgroundcolors();
-    }
-  }
-
-  //k to hide/show impassable terrain
-  if (keybeingpressed === "k") {
-    if (isimpassableactivated === true) {
-      isimpassableactivated = false;
-      hideimpassableterrain();
-    } else {
-      isimpassableactivated = true;
-      paintimpassable();
-    }
-  }
-
-  //j to turn all "land" or "water" into impassable 3rd click reset
-  if (keybeingpressed === "j") {
-    //force visibility first anyway
-    if (isimpassableactivated != true) {
-      isimpassableactivated = true;
-    }
-    applyimpassablemode();
-  }
-
-  //h to detect and hightlight landmasses another time hide
-  if (keybeingpressed === "h") {
-    landmassesmanager();
-  }
-
-  // g to enable/ disable the day and night cycle
-  if (keybeingpressed === "g") {
-    if (daynight === "off") {
-      daynight = "on";
-      daynightcycler();
-    } else {
-      daynight = "off";
-      daynightcycler();
-    }
-  }
-
-  // f to activate the tornadoes ?
-  if (keybeingpressed === "f") {
-    smoothing(centroidcoordinatearray);
-    smoothing(centroidcoordinatearray);
-    smoothing(centroidcoordinatearray);
-    smoothing(centroidcoordinatearray);
-
-    tornadomanager();
-  }
-
-  // sound key
-  if (keybeingpressed === "²") {
-    if (ambiantsound != "playing") {
-      ambiantsound = "playing";
-      customrepeatplay(FulgoraThunder);
-      customrepeatplay(FulgoraWind);
-    } else {
-      ambiantsound = "off";
-    }
-  }
-
-  // second row, write
-  // q tell in the console the ID of the clicked cell
-  if (keybeingpressed === "q") {
-    console.log(whichcell(event));
-  }
-
-  // s tell in the console the area of the clicked cell
-  if (keybeingpressed === "s") {
-    console.log(d3.polygonArea(polygonizemyID(whichcell(event))));
-  }
-
-  // log in adjacency array
-  if (keybeingpressed === "d") {
-    console.log(readadjacency(datamap));
-  }
-
-    // used to test new functions
-    if (keybeingpressed==="x"){
-      
-      showlandmassescontour(landmasseslist)
-    }
-        // used to test new functions
-        if (keybeingpressed==="c"){      
-          
-          if (daynight === "on") {
-            daynight = "off";
-            daynightcycler();
-            deactivatetornadoes();
-          }
-          cyclerandomdistrib();
-         
-        }
-}
 
 // helper function to make average
 const average = (array) => array.reduce((a, b) => a + b) / array.length;
@@ -353,7 +178,8 @@ function drawingbasend(delaunayd, voronoid) {
     .attr("stroke", "black")
     .attr("voronoi", true)
     .attr("fill", "none")
-    .attr("opacity", 0.5);
+    .attr("opacity", 0.4)
+    ;
 
   // daw the points triangulated by the delaunay
   svg
@@ -449,6 +275,25 @@ function paintcellfillcolor(cellID, color, attributestring) {
     .attr("id", "name" + cellID)
     .attr("isapaintedcell", "yes")
     .attr("background", attributestring);
+}
+
+// function to paint a bunch of cells that should be grouped as 1 path because they have the same color
+
+function paintallcellfillcolor(colorobject, attributestringarray) {
+  for (let i = 0; i < attributestringarray.length; i++) {
+    svg
+      .append("path")
+      .attr("d", attributestringarray[i])
+      .attr("opacity", 1)
+      .attr("isaremovable", "no")
+      .attr("isapaintedcell", "yes")
+      .attr("fill", colorobject.colorscheme[i])
+      .attr("background", colorobject.colornames[i])
+      // make the mesh stand out has very strong impact on overal look
+      .attr("stroke","black")
+      .attr("stroke-width",2)
+      .attr("stroke-opacity",0.25);
+  }
 }
 
 // function to make a cell impassable if it wasn't or vice versa and call the paint job accordingly
@@ -1038,9 +883,6 @@ function pathfind(origincellid, targetcellid) {
       }
     }
 
-    // if datamap[neighboured[i]].impassable == true
-    // if datamap[neighboured[i]][2] == "impassable"
-
     // compute their distance to target and store them in a an array
     var neighbourcrowflydistance = [];
     for (let i = 0; i < neighboured.length; i++) {
@@ -1067,7 +909,6 @@ function pathfind(origincellid, targetcellid) {
     cellvisited.push(origincellid);
     // from the best one pick neighbor
     if (bestneighbour === undefined) {
-      //console.log("boy no push");
       return;
     } else {
       //console.log(bestneighbour);
@@ -1078,6 +919,7 @@ function pathfind(origincellid, targetcellid) {
   if (celltovisit) {
     return celltovisit;
   } else {
+    // in fact bobby cheats and draw straight line
     console.log("no path found bobby not smart sorry");
     return [0];
   }
@@ -1177,11 +1019,10 @@ function smoothing(centroidcoordinatearray) {
   replacecentroids(centroidcoordinatearray);
 }
 
-
 // function to remove all background colors
 function removebackgroundcolors() {
-  let newselec = d3.selectAll("[background]");
-  newselec.remove();
+  let newselecbg = d3.selectAll("[background]");
+  newselecbg.remove();
 }
 
 //function to manage the impassable mode
@@ -1229,13 +1070,36 @@ function polygonizemyID(cellID) {
     return polygon;
   } else {
     //console.log("failure detected at cell " + cellID);
-    // if no polygon detected, just make a dummy empty triangle at origin
+    // if no polygon detected, make a dummy triangle in a corner
     // it doesn't throw error
-    return [
-      [0, 0],
-      [0, 0],
-      [0, 0],
+    // this happens when points are generated too close to each other to create a cell originally
+    // it may need rounds of relaxation for all of them to appears when many points are on top of each other
+    // it's be nice to tell how many points are still hidden
+    let diceroll = Math.floor((10 * Math.random()) % 4);
+    let dummypolylist = [
+      [
+        [0, 0],
+        [0, 0],
+        [0, 0],
+      ],
+      [
+        [0, height],
+        [0, height],
+        [0, height],
+      ],
+      [
+        [width, 0],
+        [width, 0],
+        [width, 0],
+      ],
+      [
+        [width, height],
+        [width, height],
+        [width, height],
+      ],
     ];
+
+    return dummypolylist[diceroll];
   }
 }
 
@@ -1259,24 +1123,33 @@ function landmassesmanager() {
 
 // function to show landmasses
 function showlandmasses() {
-  for (i = 0; i < landmasseslist.length; i++) {
+  // need be used after landmass identification
+  for (let i = 0; i < landmasseslist.length; i++) {
+    // pick random value for RGB coloring of a landmass
     let diceroll1 = Math.round(255 * Math.random());
     let diceroll2 = Math.round(255 * Math.random());
     let diceroll3 = Math.round(255 * Math.random());
+    // make only 1 path per landmass
+    // would be better if countour point was used
+    let pathforlandmass = d3.path();
 
-    for (j = 0; j < landmasseslist[i].length; j++) {
-      svg
-        .append("path")
-        .attr("d", voronoid.renderCell(landmasseslist[i][j]))
-        .attr(
-          "fill",
-          "rgb(" + diceroll1 + ", " + diceroll2 + " , " + diceroll3 + ")"
-        )
-        .attr("isaremovable", "yes")
-        .attr("isapaintedcell", landmasseslist[i][j])
-        .attr("fill-opacity", 0.3)
-        .attr("islandmassoverlay", "yes");
+    for (let j = 0; j < landmasseslist[i].length; j++) {
+      let cell = polygonizemyID(landmasseslist[i][j]);
+      pathforlandmass.moveTo(cell[0][0], cell[0][1]);
+      for (let k = 1; k < cell.length - 1; k++) {
+        pathforlandmass.lineTo(cell[k][0], cell[k][1]);
+      }
     }
+    svg
+      .append("path")
+      .attr("d", pathforlandmass)
+      .attr(
+        "fill",
+        "rgb(" + diceroll1 + ", " + diceroll2 + " , " + diceroll3 + ")"
+      )
+      .attr("isaremovable", "yes")
+      .attr("fill-opacity", 0.3)
+      .attr("islandmassoverlay", "yes");
   }
 }
 
@@ -1392,12 +1265,12 @@ function turnonthelights(timecounter) {
 
   if (lightmode === "on") {
     if (timecounter % 15 === 0) {
-      let newselec2 = d3.selectAll("[ispointsforlight]");
-      newselec2.remove();
+      let newselecpointlight = d3.selectAll("[ispointsforlight]");
+      newselecpointlight.remove();
       //it works but i can't tell why ._groups[0][0]  is necessary??
-      let newselec = d3.selectAll("path" + "[daynight]")._groups[0][0];
+      let newseleclight = d3.selectAll("path" + "[daynight]")._groups[0][0];
       let svg2 = document.getElementById("maincontainer");
-      if (newselec) {
+      if (newseleclight) {
         // 3rd version takes only passable cells, and draw 1 path for all points
         // random radius makes a gloow effect with the fast refresh from night moving
         let pathjoiningpointsforlights = d3.path();
@@ -1406,7 +1279,7 @@ function turnonthelights(timecounter) {
           // create fake invisible points with same offset as currentnightpos to check for collision with the translated path that represent night shading
           pointObj.x = -currentnightpos + datamap[passablecelllist[i]][0];
           pointObj.y = datamap[passablecelllist[i]][1];
-          if (newselec.isPointInFill(pointObj)) {
+          if (newseleclight.isPointInFill(pointObj)) {
             let radius = 3 + Math.round(1 * Math.random());
             pathjoiningpointsforlights.moveTo(
               datamap[passablecelllist[i]][0] + radius,
@@ -1434,8 +1307,8 @@ function turnonthelights(timecounter) {
       svg2 = 0;
     }
   } else {
-    let newselec2 = d3.selectAll("[ispointsforlight]");
-    newselec2.remove();
+    let newselecpointlight = d3.selectAll("[ispointsforlight]");
+    newselecpointlight.remove();
   }
 }
 
@@ -1448,7 +1321,6 @@ function identifypassable() {
     }
   });
 }
-
 
 // function to draw the night/day cycle
 // that's probably not how one should do an update loop, but for now it do the job
@@ -1473,7 +1345,6 @@ function daynightcycler() {
   var daynightFunction = async () => {
     // repeat unless toggled off
     while (daynight === "on") {
-
       timecounter = (timecounter + 1) % 1000000;
       lightmode = "on";
       // update position
@@ -1492,9 +1363,9 @@ function daynightcycler() {
           .getItem(0)
           .setTranslate(currentnightpos, 0);
       }
-           // call on the lights check each update may be smarter to stagger with % so every 5 updates, 10% of nodes are checked for performance
-           turnonthelights(timecounter);
-           animatetornadoes(timecounter);
+      // call on the lights check each update may be smarter to stagger with % so every 5 updates, 10% of nodes are checked for performance
+      turnonthelights(timecounter);
+      animatetornadoes(timecounter);
 
       // wait before update
       await delay(dayticktime);
@@ -1506,7 +1377,7 @@ function daynightcycler() {
     selecdaynight.remove();
     daynight = "off";
     lightmode = "off";
-    aretornadoesactive ="off";
+    aretornadoesactive = "off";
     turnonthelights(timecounter);
   };
 

@@ -136,7 +136,7 @@ function showlandmassescontour(landmasseslist) {
   // is it outside ?=
   // does it have impassable neighbour ? ||
   // does it have a point on the edge of the graph ?
-  // 
+  //
   //then
   //
   // in the list of contour cell, pick one of the the upper most point and draw from there ?
@@ -144,15 +144,15 @@ function showlandmassescontour(landmasseslist) {
   // if segment shared by any of same landmass neighbour => no
   // if no segment, it means we finish with a point that is also shared with a cell, that will be 2nd cell
   //
-  let contourtilelist=[];
+  let contourtilelist = [];
   for (let i = 0; i < landmasseslist.length; i++) {
     contourtilelist.push([]);
     for (let j = 0; j < landmasseslist[i].length; j++) {
       let cellID = landmasseslist[i][j];
       let neighbor = [...voronoid.neighbors(cellID)];
       if (is1neighbournotpassable(neighbor)) {
-       // console.log(cellID + " is a contour tile");
-       contourtilelist[i].push(cellID)
+        // console.log(cellID + " is a contour tile");
+        contourtilelist[i].push(cellID);
       } else {
         // other contour tile are those that have a point that have either the x or the y coordinate the same as the bound limit
 
@@ -169,19 +169,13 @@ function showlandmassescontour(landmasseslist) {
           }
         }
         if (haspointonboundary) {
-          contourtilelist[i].push(cellID)
+          contourtilelist[i].push(cellID);
           //console.log(cellID + " is also contour tile");
         }
       }
-
-
-
-
-
-
     }
   }
-console.log(contourtilelist)
+  console.log(contourtilelist);
   //console.log(landmasseslist);
 }
 
@@ -189,7 +183,6 @@ console.log(contourtilelist)
 // on landmass take only the points from contour cell that are unique or that are shared by 2 contour cell
 // as the other points on the ladmass must be shared by at least 3 cells including 1 non-contour
 // right ?
-
 
 // function to test if 1 neighbour is not passable
 function is1neighbournotpassable(neighboursarray) {
