@@ -319,8 +319,8 @@ function cyclerandomdistrib() {
         let j = (i+(0.5*numberofcellsatstart))%numberofcellsatstart;
         let x = Math.floor(((1 + j) * Math.sqrt(averagecellarea)) % width)+(2*(0.5-Math.random())*noise);
         let y =
-         ( Math.floor(((1 + j) / Math.floor(width / Math.sqrt(averagecellarea)))) * Math.sqrt(averagecellarea))%height;
-        datamap.push([x, y])+(2*(0.5-Math.random())*noise);
+         (( Math.floor(((1 + j) / Math.floor(width / Math.sqrt(averagecellarea)))) * Math.sqrt(averagecellarea))%height)+(2*(0.5-Math.random())*noise);
+        datamap.push([x, y]);
       } 
       console.log("case 32");
 
