@@ -2,6 +2,10 @@
 
 TL:DR=>  press "f" and click once on the background for the "full" thing now with lightning bolt
 
+You can access those tips by clicking on the question mark buttons
+
+You can try to click the other buttons too , the button for fullscreen doesn't work, you should rather go to fullscreen first, and then refresh the page, because i haven't made it to resize nicely yet, it can only take the fullscreen when it's refreshed while already fullscreen. Some other buttons also have conflict with keys, it doesn't throw error but it shows there's still a lot of work. It's much faster than it used to be, but here too still lot of work.
+
 pressing "a" and clicking add points 
 
 pressing "z" and clicking smooth the graph
