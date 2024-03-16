@@ -61,11 +61,13 @@ var distrilist = [
 ];
 
 // function to change the type of distribution of the random points
-function cyclerandomdistrib() {
+function cyclerandomdistrib(param) {
   // every click increase the counter by 1 changing which function is used from the distrilist
   // some functions from the distrilist are very generic and require particular code to generate proper data
   // this is found at each case
-  districounter = (districounter + 1) % distrilist.length;
+  if (!param) {
+    districounter = (districounter + 1) % distrilist.length;
+  }
   // reset previous data
   datamap = [];
   // init counter or reuse  global var position
@@ -299,14 +301,16 @@ function cyclerandomdistrib() {
       console.log("case 30");
 
       break;
-      // grids
+    // grids
     case 31:
       // start top left
       datamap = [];
       for (let i = 0; i < numberofcellsatstart; i++) {
-        let x = ((1 + i) * Math.sqrt(averagecellarea)) % width;
+        let x = Math.floor((1 + i) * Math.sqrt(averagecellarea)) % width;
         let y =
-          Math.floor(((1 + i) / Math.floor(width / Math.sqrt(averagecellarea)))) * Math.sqrt(averagecellarea)%height;
+          (((1 + i) / (width / Math.sqrt(averagecellarea))) *
+            Math.sqrt(averagecellarea)) %
+          height;
         datamap.push([x, y]);
       }
       console.log("case 31");
@@ -316,12 +320,19 @@ function cyclerandomdistrib() {
       datamap = [];
       for (let i = 0; i < numberofcellsatstart; i++) {
         let noise = 5;
-        let j = (i+(0.5*numberofcellsatstart))%numberofcellsatstart;
-        let x = Math.floor(((1 + j) * Math.sqrt(averagecellarea)) % width)+(2*(0.5-Math.random())*noise);
+        let j = (i + 0.5 * numberofcellsatstart) % numberofcellsatstart;
+        let x =
+          Math.floor(((1 + j) * Math.sqrt(averagecellarea)) % width) +
+          2 * (0.5 - Math.random()) * noise;
         let y =
-         (( Math.floor(((1 + j) / Math.floor(width / Math.sqrt(averagecellarea)))) * Math.sqrt(averagecellarea))%height)+(2*(0.5-Math.random())*noise);
+          ((Math.floor(
+            (1 + j) / Math.floor(width / Math.sqrt(averagecellarea))
+          ) *
+            Math.sqrt(averagecellarea)) %
+            height) +
+          2 * (0.5 - Math.random()) * noise;
         datamap.push([x, y]);
-      } 
+      }
       console.log("case 32");
 
       break;

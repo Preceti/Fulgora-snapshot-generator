@@ -1,116 +1,13 @@
-// generic definition and initialization
-// svg definition : bounding box
-// removed % to prevent scrollbar appearing
-//0.98*document.documentElement.clientWidth;
-const width = 0.98 * window.innerWidth;
-const height = 0.9 * window.innerHeight;
-//you can change this number to change the number cell at start
-const numberofcellsatstart = 1500;
-//bigger number here means more land vs water
-// [0.5-1.5] are quite extreme bound already
-// 0.72 is ok for most value between 1000 and  20K points
-const ratiotonormalcell = 0.72;
-
-// empty variable initialization
-var keybeingpressed = null;
-var mouse = null;
-var centroidcoordinatearray = [];
-var centroidcoordinatearrayrough = [];
-var hasorigin = "none";
-var hastarget = "none";
-var hasoriginp = "none";
-var hastargetp = "none";
-var impassablecelllist = [];
-var passablecelllist = [];
-var adjacencysuperarray = [];
-var cleanadjacencysuperarray = [];
-var activecell = "none";
-var overlayactive = "none";
-var landmasses = "none";
-var landmasseslist = [];
-var landmassesedgelist = [];
-var daynight = "off";
-var lightmode = "off";
-var currentnightpos = 0;
-var currentnightpos2 = 0;
-// when circle is small one can't see there is a bit missing with pi = 3
-var tau = 2 * Math.PI;
-var faketau = Math.floor(100 * tau) / 100;
-var fakertau = 6;
-var aretornadoesactive = false;
-var tornadospawner = [];
-var tornadoprespawner = [];
-var tornadopostspawner = [];
-var tornadoprecaster = [];
-var lightningcasted = [];
-var thunderstruck = [];
-var tornadoanimationframe = 12;
-var timecounter = 0;
-var averagecellarea = (height * width) / numberofcellsatstart;
-var tornadosize = 1.2 * Math.sqrt(averagecellarea);
-
-//make background off by default for performance when smoothing
-var isbackgroundcoloractivated = false;
-//make impassable on by default
-var isimpassableactivated = true;
-// make no choice for what is impassable. ( "none"/ "land" / "water")
-var impassablemode = "none";
-// list of type of cells
-var icecelllist = [];
-var watercelllist = [];
-var landcelllist = [];
-var shallowwatercelllist = [];
-var deepwatercelllist = [];
-var mountaincelllist = [];
-var hillcelllist = [];
-var bluemysterycelllist = [];
-
-// color from factorio Fulgora planet
-const Fulgoracolor = {
-  colornames: [
-    "deepwater",
-    "water",
-    "shallowwater",
-    "hills",
-    "land",
-    "mountain",
-    "bluemystery",
-  ],
-  colorscheme: [
-    "#3a2029",
-    "#4a2829",
-    "#987954",
-    "#734131",
-    "#845542",
-    "#737974",
-    "#006299",
-  ],
-  //deepwater = "sand deep"
-  deepwater: "#3a2029",
-  //water = "sandshallow"
-  water: "#4a2829",
-  //shallowwater = "edge island":
-  shallowwater: "#987954",
-  //hills = "fillislandred"
-  hills: "#734131",
-  //land = "fill island tan"
-  land: "#845542",
-  //mountain =  "fill island blue"
-  mountain: "#737974",
-  // this is specific to Fulgora
-  bluemystery: "#006299",
-};
-
-// Earth like color
-const Earthcolor = {
-  land: "#a5d260",
-  ice: "#99ccff",
-  mountain: "#98492f",
-  hills: "#cc8800",
-  shallowwater: "#2f6397",
-  water: "#212869",
-  deepwater: "#12123b",
-};
+// svg creation
+const svg = d3
+  .create("svg")
+  .attr("id", "maincontainer")
+  .attr("y", UIheight)
+  .attr("position", "fixed")
+  .attr("display", "block")
+  .attr("width", width)
+  .attr("height", height);
+container.append(svg.node());
 
 // var to change the color palette
 var planet = Fulgoracolor;
@@ -128,24 +25,6 @@ var delaunayd = d3.Delaunay.from(datamap);
 
 //create a voronoi diagram from the previous delaunay triangulation
 var voronoid = delaunayd.voronoi([0, 0, width, height]);
-
-// svg creation
-const svg = d3
-  .create("svg")
-  .attr("id", "maincontainer")
-  .attr("width", width)
-  .attr("height", height);
-container.append(svg.node());
-
-// keyboard detector
-d3.selectAll("*").on("keydown", function (event) {
-  keybeingpressed = event.key;
-});
-
-// keyboard resetor
-d3.selectAll("*").on("keyup", function () {
-  keybeingpressed = null;
-});
 
 // helper function to make average
 const average = (array) => array.reduce((a, b) => a + b) / array.length;
@@ -178,8 +57,7 @@ function drawingbasend(delaunayd, voronoid) {
     .attr("stroke", "black")
     .attr("voronoi", true)
     .attr("fill", "none")
-    .attr("opacity", 0.4)
-    ;
+    .attr("opacity", 0.4);
 
   // daw the points triangulated by the delaunay
   svg
@@ -193,6 +71,7 @@ function drawingbasend(delaunayd, voronoid) {
     .append("path")
     .attr("d", voronoid.renderBounds())
     .attr("stroke", "black")
+    .attr("stroke-width", 2)
     .attr("opacity", 1)
     .attr("fill", "none")
     .attr("bounds", true);
@@ -280,7 +159,8 @@ function paintcellfillcolor(cellID, color, attributestring) {
 // function to paint a bunch of cells that should be grouped as 1 path because they have the same color
 
 function paintallcellfillcolor(colorobject, attributestringarray) {
-  for (let i = 0; i < attributestringarray.length; i++) {
+  let l = attributestringarray.length;
+  for (let i = 0; i < l; i++) {
     svg
       .append("path")
       .attr("d", attributestringarray[i])
@@ -290,9 +170,9 @@ function paintallcellfillcolor(colorobject, attributestringarray) {
       .attr("fill", colorobject.colorscheme[i])
       .attr("background", colorobject.colornames[i])
       // make the mesh stand out has very strong impact on overal look
-      .attr("stroke","black")
-      .attr("stroke-width",2)
-      .attr("stroke-opacity",0.25);
+      .attr("stroke", "black")
+      .attr("stroke-width", 2)
+      .attr("stroke-opacity", 0.25);
   }
 }
 
@@ -472,7 +352,8 @@ function paintallcellbasedonperimeter() {
   for (element of datamap) {
     let edgelist = polygonizemyID(datamap.indexOf(element));
     let perimeter = [];
-    for (let i = 0; i < edgelist.length - 1; i++) {
+    let l = edgelist.length;
+    for (let i = 0; i < l - 1; i++) {
       perimeter.push(
         Math.hypot(
           edgelist[i + 1][0] - edgelist[i][0],
@@ -490,8 +371,8 @@ function paintallcellbasedonperimeter() {
 
   // at this point datamap info contain an array with the perimeter of every cell and longerperimeter is a trusted value
   //console.log(datamapinfo)
-
-  for (let i = 0; i < datamapinfo.length; i++) {
+  let l = datamapinfo.length;
+  for (let i = 0; i < l; i++) {
     svg
       .append("path")
       .attr("d", voronoid.renderCell(i))
@@ -509,14 +390,11 @@ function drawallcentroids() {
   // create empty array to store data
   var centroidcoordinatearrayrough = [];
   centroidcoordinatearray = [];
-
   // iterate each cell and put the coordinate of each edge of each cell in an array
+
   for (let i = 0; i < datamap.length; i++) {
     centroidcoordinatearrayrough.push(polygonizemyID(i));
-  }
-
-  // trim coordinate from double
-  for (let i = 0; i < centroidcoordinatearrayrough.length; i++) {
+    // remove duplicate point we don't need to close the polygon
     centroidcoordinatearrayrough[i].splice(-1);
   }
 
@@ -539,19 +417,16 @@ function drawallcentroids() {
     yforcentroid = [];
     xforcentroid = [];
     // push the couple [x,y] of the centroid for that cell id in an array with the same index
+    // accessed for smoothing / "loyd's relaxation"
     centroidcoordinatearray.push([intsumx, intsumy]);
-  }
-
-  // draw circles at the points in the array
-  for (let i = 0; i < centroidcoordinatearray.length; i++) {
     svg
       .append("circle")
       .attr("fill", "black")
       .attr("opacity", 0.5)
       .attr("r", 3)
       .attr("iscenterofcell", "yes")
-      .attr("cx", centroidcoordinatearray[i][0])
-      .attr("cy", centroidcoordinatearray[i][1]);
+      .attr("cx", intsumx)
+      .attr("cy", intsumy);
   }
 }
 
@@ -1149,14 +1024,14 @@ function showlandmasses() {
       )
       .attr("isaremovable", "yes")
       .attr("fill-opacity", 0.3)
-      .attr("islandmassoverlay", "yes");
+      .attr("islandmassoverlay", true);
   }
 }
 
 // funtion to hide landmasses
 function hidelandmasses() {
-  let newselec = d3.selectAll("[islandmassoverlay]");
-  newselec.remove();
+  let newseleclandmass = d3.selectAll("[islandmassoverlay]");
+  newseleclandmass.remove();
 }
 
 // function to draw the shading as a svg
@@ -1260,17 +1135,17 @@ function drawtheshading() {
 }
 
 // function drawing circle for "lights" in passable cells at night
+// has been damaged by the new landmass overlay in 1 path, it now disappear somehow
 function turnonthelights(timecounter) {
   // stagger the update for "lights"
-
   if (lightmode === "on") {
     if (timecounter % 15 === 0) {
-      let newselecpointlight = d3.selectAll("[ispointsforlight]");
-      newselecpointlight.remove();
+      let newselec2 = d3.selectAll("[ispointsforlight]");
+      newselec2.remove();
       //it works but i can't tell why ._groups[0][0]  is necessary??
-      let newseleclight = d3.selectAll("path" + "[daynight]")._groups[0][0];
+      let newselec = d3.selectAll("path" + "[daynight]")._groups[0][0];
       let svg2 = document.getElementById("maincontainer");
-      if (newseleclight) {
+      if (newselec) {
         // 3rd version takes only passable cells, and draw 1 path for all points
         // random radius makes a gloow effect with the fast refresh from night moving
         let pathjoiningpointsforlights = d3.path();
@@ -1279,7 +1154,7 @@ function turnonthelights(timecounter) {
           // create fake invisible points with same offset as currentnightpos to check for collision with the translated path that represent night shading
           pointObj.x = -currentnightpos + datamap[passablecelllist[i]][0];
           pointObj.y = datamap[passablecelllist[i]][1];
-          if (newseleclight.isPointInFill(pointObj)) {
+          if (newselec.isPointInFill(pointObj)) {
             let radius = 3 + Math.round(1 * Math.random());
             pathjoiningpointsforlights.moveTo(
               datamap[passablecelllist[i]][0] + radius,
@@ -1307,8 +1182,8 @@ function turnonthelights(timecounter) {
       svg2 = 0;
     }
   } else {
-    let newselecpointlight = d3.selectAll("[ispointsforlight]");
-    newselecpointlight.remove();
+    let newselec2 = d3.selectAll("[ispointsforlight]");
+    newselec2.remove();
   }
 }
 
@@ -1377,7 +1252,7 @@ function daynightcycler() {
     selecdaynight.remove();
     daynight = "off";
     lightmode = "off";
-    aretornadoesactive = "off";
+    aretornadoesactive = false;
     turnonthelights(timecounter);
   };
 
@@ -1397,6 +1272,7 @@ function daynightcycler() {
 // Actual beginning of the script run when the page is loaded
 
 drawingbase(delaunayd, voronoid);
-svg.on("click", function (event) {
+initUI.color = "passed";
+svg.on("mouseup", function (event) {
   clickdetector(event);
 });

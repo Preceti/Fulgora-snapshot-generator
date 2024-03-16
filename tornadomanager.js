@@ -340,8 +340,8 @@ function at_tornado(timecounter, staggerer) {
       1) /
       maxnumberofimageonsheetbecauseofsvg
   );
-  let newselec = d3.selectAll("[istornado]");
-  newselec.remove();
+  let newselect = d3.selectAll("[istornado]");
+  newselect.remove();
 
   for (element of tornadospawner) {
     // create a tornado at the location of the tornadospwaner center of cell
@@ -497,7 +497,6 @@ function at_castertornado() {
       .attr("width", tornadosize)
       .attr("viewBox", "0 0 32 32")
       .attr("image-rendering", "pixelated")
-
       .attr("preserveAspectRatio", alignmentorder[castertornadoaligment])
       .attr("frameleft", element4[1] - 1)
       .attr("ID", tornadoprecaster.indexOf(element4));
@@ -686,7 +685,7 @@ function at_thunderstruck() {
   let paththunderstruck = d3.path();
   for (let i = thunderstruck.length - 1; i >= 0; i--) {
     thunderstruck[i][1] += 1;
-    // those are created with a [1] of 0 and the number here is the amount of update they are visible
+    // those are created with a [1] of 0 and the number "20" here is the amount of update they are visible
     if (thunderstruck[i][1] >= 20) {
       thunderstruck.splice(i, 1);
     } else {

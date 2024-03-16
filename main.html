@@ -1,20 +1,24 @@
 <!DOCTYPE html>
-<head></head>
-<div id="container">
-  click while pressing a key => key that do something => [² a z e r t y u i o p
-  m l k j h g f c]key that print something in console=> [q s d x]
-
-  To make fulgora press z then click a few times, then press l and click once, to feel the tornadoes press f and click
- 
+<head>
+  <!-- this needs to be loaded first because it's used in init.js to create dummy box to measure text size in pixel to adjust rest of things-->
   <script src="d3.js"></script>
-  <script src="djiskra.js"></script>
-
-  <script src="landmassidentifier.js"></script>
-  <script src ="soundmanager.js"></script>
-  <script src ="backgroundmanager.js"></script>
-  <script src ="tornadomanager.js"></script>
-  <script src ="script.js"></script>
-  <script src ="Inputhandler.js"></script>
-  <script src="noises.js"></script>
-
-</div>
+</head>
+<body style="margin: 0; padding: 0; position: fixed">
+  <div id="container" style="margin: 0; padding: 0">
+    <!-- Detect browser settings for text height to adjust the rest -->
+    <!-- I thought it look cool when icons scale with zoom, but then there is no real way to control which of them are visible when they won't fit screen -->
+    <!-- ideally there should always be the same icons, but need to come up with something when screen ratio is different -->
+    <script src="init.js"></script>
+    <!-- Load other datas computed after text height is detected-->
+    <script src="loading.js"></script>
+    <script src="soundmanager.js"></script>
+    <script src="djiskra.js"></script>
+    <script src="landmassidentifier.js"></script>
+    <script src="backgroundmanager.js"></script>
+    <script src="tornadomanager.js"></script>
+    <script src="Inputhandler.js"></script>
+    <script src="noises.js"></script>
+    <script src="UI.js"></script>
+    <script src="script.js"></script>
+  </div>
+</body>

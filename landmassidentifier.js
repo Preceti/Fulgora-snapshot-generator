@@ -1,3 +1,4 @@
+// there's only 6 functions there but a lot of comment and it's messy
 // I thought i would make a function to draw only the contour of landmasses
 // to reduce the amount of space occupied in the end result by the shallow water color to match more the source image
 // turned out difficult
@@ -8,15 +9,18 @@
 
 // function to find landmasses ( most time spent on a function so far)
 function findlandmasses() {
+  // doing this once to fasten looking for neighbors
+  readadjacency(datamap);
   // reset previous
-  landmasseslist = [];
   passablecelllist = [];
-  var todelete = [];
   //function will refill this under form => [[idcell1,idcell2,],[idcell4]] for 2 landmass, one with 2 cell and one with 1.
+  landmasseslist = [];
+  var todelete = [];
   datamap.forEach((element) => {
-    if (!impassablecelllist.includes(datamap.indexOf(element))) {
-      passablecelllist.push([datamap.indexOf(element)]);
-      landmasseslist.push([datamap.indexOf(element)]);
+    let cellID = datamap.indexOf(element);
+    if (!impassablecelllist.includes(cellID)) {
+      passablecelllist.push([cellID]);
+      landmasseslist.push([cellID]);
     }
   });
 
@@ -28,10 +32,13 @@ function findlandmasses() {
   // it (fail to) make sure to remove the other occurences of them from both the passablecellist and the landmasses list so that they would not be used twice
   // when there is no cell left in the passablecelllist, it means they all have been sorted in the correct array inside the landmasslist array of array
   while (passablecelllist.length > 0) {
-    for (let i = 0; i < landmasseslist.length; i++) {
+    let l = landmasseslist.length;
+    for (let i = 0; i < l; i++) {
       for (element of landmasseslist[i]) {
         if (!iselementincluded(element, landmasseslist, i - 1)) {
-          let neighbour = [...voronoid.neighbors(element)];
+          let neighbour = adjacencysuperarray[element];
+          //[...voronoid.neighbors(element)];
+          //console.log(element)
 
           for (element2 of neighbour) {
             while (
@@ -58,6 +65,14 @@ function findlandmasses() {
   }
   deleteduplicatelandmass(landmasseslist, todelete);
   console.log(landmasseslist);
+
+  // restore passable cell list for lights to show up
+  datamap.forEach((element) => {
+    let cellID = datamap.indexOf(element);
+    if (!impassablecelllist.includes(cellID)) {
+      passablecelllist.push(cellID);
+    }
+  });
 }
 
 // helper function to check if an element is included in array of array
@@ -75,8 +90,10 @@ function iselementincluded(element, arrayofarray, i) {
 // helper function to delete an element because i couldn't manage otherwise
 // required to identify landmass
 function deleteduplicatelandmass(landmasseslist, todelete) {
-  for (let i = todelete.length - 1; i >= 0; i--) {
-    for (let j = landmasseslist.length - 1; j >= 0; j--) {
+  let l = todelete.length;
+  for (let i = l - 1; i >= 0; i--) {
+    let l2 = landmasseslist.length;
+    for (let j = l2 - 1; j >= 0; j--) {
       // comparing a number with an array containing only that number was difficult, why work with 2 == and not 3 ?
       if (todelete[i] == landmasseslist[j][0]) {
         //console.log("delete cell "+todelete[i]+" or so called "+landmasseslist[j][0] + " at index " + j)

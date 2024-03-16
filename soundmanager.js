@@ -32,16 +32,36 @@ function customrepeatplay(targetArray) {
       return;
     }
   
+
     target.busy = true;
     target.source = targetArray;
     target.addEventListener("ended", setCanplay, false);
     target.play();
+  
+  
   }
 
   function setCanplay(event) {
     event.target.removeEventListener("ended", setCanplay, false);
     event.target.busy = false;
+  
     if( ambiantsound= "playing"){
    customrepeatplay(event.target.source)}
+
+  }
+
+
+  function stopsound(targetArray){
+    if (!targetArray) {
+      return;
+    }
+    let target = targetArray.find((sound) => sound.busy);
+    if (!target) {
+      return;
+    }
+    target.pause()
+    target.busy =false;
+    ambiantsound ="off"
+
   }
   
