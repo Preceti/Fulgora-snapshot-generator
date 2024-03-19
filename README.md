@@ -1,6 +1,6 @@
 /!\I have no idea what i'm doing/!\
 
-TL:DR=>  press "f" and click once on the background for the "full" thing now with lightning bolt
+TL:DR=>  press "f" and click once on the background for the "full" thing now with lightning bolt and worms
 
 You can access those tips by clicking on the question mark buttons
 
