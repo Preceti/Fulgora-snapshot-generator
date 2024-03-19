@@ -187,9 +187,16 @@ function clickdetector(event) {
 // keyboard detector
 d3.selectAll("html").on("keydown", function (event) {
   keybeingpressed = event.key;
+  let addpointbutton = d3.selectAll("#Addpoint");
+  if  (keybeingpressed==="a"){    
+    addpointbutton.attr("href", "" + iconsforbuttons.Addedpoint.src + "");
+  } 
+  
 });
 
 // keyboard resetor
 d3.selectAll("html").on("keyup", function () {
   keybeingpressed = null;
+  let addpointbutton = d3.selectAll("#Addpoint");
+  addpointbutton.attr("href", "" + iconsforbuttons.Addpoint.src + "");
 });

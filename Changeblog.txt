@@ -1,0 +1,11 @@
+19/03
+Realized i could write stuff here to document things i add and don't finish to add because i'm considering options until i forget about them, to avoid adding them again with a different name once i'm finally decided.
+
+Adding worms as test subject to try and get something moving from cell to cell in a consistent speed accross orientation following randombased motion.
+Considering interaction with tornadoes in favor of the tornado or being set on fire by lightning and then becoming oil tile or item on the ground, but then oil also need to be set on fire by lighning or it would accumulate on the map without regulation. Maybe worms could try to avoid picking their random destination amongst cells at nights if they can and it would look cool on the map.
+
+I think some buttons are new too, but those are mostly for testing like scaffold to understand how to make and what to make they do not have proper interaction with the keyboard.Except the "a" key, which isn't a buton Maybe tooltip on hover would help making things less confusing, improved visual or a little thingy circling around the button that is "toggled" as a fallback plan for making things move using the built in web .translate or those from d3 if i can't make myself the position function for worms to try a lower challenge before trying again the bigger one.
+
+Algorithm for drawing contour of landmasses still seem like the big boss,  stuck on the (double triple...) donut problem. contour is not enough it would consider the inner part as filled if not properly extruded and it's unclear what are the different cases of points belonging to which contour that can occur. Things like 12 tiles joining in a single point and half of them are not part of the landmass, how to draw ? no idea how to exclude small segment from cells as a way to avoid those situations though i know it's possible. i'd rather allow some very weird things to occur to make it more interesting.
+
+Ideally there is no need to read text once it's open and it works for all keyboard, you could change planets and it would show some things happening that makes you want to click some things after observation to see how the world would react to the poke.

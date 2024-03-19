@@ -6,12 +6,16 @@ createUIbuttons();
 // drawing all centroids
 // adding overlay on all tiles ...
 function createUIbuttons() {
+
+  // changing the position here reposition the buttons easy shift
+let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop", "Color","Overlay", "Fullscreen","Impassable","Allpassable","Worms","left","planet","planetislarge","planetislarge", "right" ]
+
   // Info Button ?
   svgtop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "infobutton")
-    .attr("x", 0)
+    .attr("x", positionlist.indexOf("infobutton")*UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -29,25 +33,62 @@ function createUIbuttons() {
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Sound")
-    .attr("x", 1 * UIheight)
+    .attr("x", positionlist.indexOf("Sound")*UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
-    .attr("href", "" + iconsforbuttons.Musicoff.src + "");
+    .attr("href", "" + iconsforbuttons.Musicon.src + "");
   let soundbutton = d3.selectAll("#Sound");
   soundbutton.on("click", function (event) {
     if (ambiantsound != "playing") {
       ambiantsound = "playing";
       customrepeatplay(FulgoraThunder);
       customrepeatplay(FulgoraWind);
+      soundbutton.attr("href", "" + iconsforbuttons.Musicoff.src + "");
     } else {
       ambiantsound = "off";
-      stopsound(FulgoraWind)
-      stopsound(FulgoraThunder)
+      stopsound(FulgoraWind);
+      stopsound(FulgoraThunder);
+      soundbutton.attr("href", "" + iconsforbuttons.Musicon.src + "");
     }
- 
-
   });
+
+
+
+
+
+  // Add point
+  // isn't actually a button is an indicator when the key that makes the next click add points is being pressed so user is aware it will work before clicking
+  svgtop
+    .append("image")
+    .attr("image-rendering", "pixelated")
+    .attr("id", "Addpoint")
+    .attr("x", positionlist.indexOf("Addpoint")*UIheight)
+    .attr("y", 0)
+    .attr("width", UIheight)
+    .attr("height", UIheight)
+    .attr("href", "" + iconsforbuttons.Addpoint.src + "");
+  let addpointbutton = d3.selectAll("#Addpoint");
+  addpointbutton.on("click", function (event) {  
+    keybeingpressed = event.key;
+    if  (keybeingpressed==="a"){
+    
+      addpointbutton.attr("href", "" + iconsforbuttons.Addedpoint.src + "");
+    } 
+  });
+  addpointbutton.on("keyup", function (event) {   
+    keybeingpressed = event.key;
+    addpointbutton.attr("href", "" + iconsforbuttons.Addpoint.src + ""); 
+  });
+
+
+
+
+
+
+
+
+
 
   // sun button , need to become a moon sometimes
   // should the UI update in a loop and change itself too ?
@@ -57,7 +98,7 @@ function createUIbuttons() {
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Sun")
-    .attr("x", 2 * UIheight)
+    .attr("x", positionlist.indexOf("Sun")*UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -80,7 +121,7 @@ function createUIbuttons() {
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Shuffle")
-    .attr("x", 3 * UIheight)
+    .attr("x", positionlist.indexOf("Shuffle")*UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -103,7 +144,7 @@ function createUIbuttons() {
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Smooth")
-    .attr("x", 4 * UIheight)
+    .attr("x",  positionlist.indexOf("Smooth")*UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -128,7 +169,7 @@ function createUIbuttons() {
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Loop")
-    .attr("x", 5 * UIheight)
+    .attr("x", positionlist.indexOf( "Loop")*UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -145,7 +186,7 @@ function createUIbuttons() {
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Color")
-    .attr("x", 6 * UIheight)
+    .attr("x",  positionlist.indexOf( "Color")*UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -155,13 +196,32 @@ function createUIbuttons() {
     color(initUI.color);
   });
 
+    // helper function for color
+    function color(r) {
+      if (r === "init") {
+        initUI.color = "passed";
+        console.log("too early would throw error");
+      } else if (r === "passed") {
+        let colorbutton = d3.selectAll("#Color");
+        if (isbackgroundcoloractivated === true) {
+          colorbutton.attr("href", "" + iconsforbuttons.Color.src + "");
+          isbackgroundcoloractivated = false;
+          removebackgroundcolors();
+        } else {
+          colorbutton.attr("href", "" + iconsforbuttons.Nocolor.src + "");
+          isbackgroundcoloractivated = true;
+          fbackgroundcolors();
+        }
+      }
+    }
+
   // Paint overlay button
   // old "t" key action
   svgtop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Overlay")
-    .attr("x", 7 * UIheight)
+    .attr("x",  positionlist.indexOf( "Overlay")*UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -177,7 +237,7 @@ function createUIbuttons() {
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Fullscreen")
-    .attr("x", 8 * UIheight)
+    .attr("x",positionlist.indexOf( "Fullscreen")*UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -187,13 +247,42 @@ function createUIbuttons() {
     fullscreen(initUI.fullscreen);
   });
 
+  // not sure those should be included in the createUIButtons function or put aside
+  // helper function for fullscreen
+  function fullscreen(r) {
+    if (r === "init") {
+      initUI.fullscreen = "notfullscreen";
+      console.log("too early would throw error");
+    } else if (r === "fullscreen") {
+      let fullscreenbutton = d3.selectAll("#Fullscreen");
+      document.exitFullscreen();
+      initUI.fullscreen = "notfullscreen";
+      fullscreenbutton.attr("href", "" + iconsforbuttons.Fullscreen.src + "");
+    } else if (r === "notfullscreen") {
+      let fullscreenbutton = d3.selectAll("#Fullscreen");
+      initUI.fullscreen = "fullscreen";
+      // doesn't reproduce F11 functionnality in that a refresh of the page will also exit fullscreen when entered this way rather than with F11
+      document.querySelector("html").requestFullscreen();
+      //window.open("url.html",'','fullscreen=yes')
+      //that would have been too easy
+      // need to re-measure and redraw
+      //location.reload();
+      fullscreenbutton.attr(
+        "href",
+        "" + iconsforbuttons.Notfullscreen.src + ""
+      );
+    }
+  }
+
+
+
   // Paint/hide Impassable button
   // old "k" key action
   svgtop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Impassable")
-    .attr("x", 9 * UIheight)
+    .attr("x",positionlist.indexOf( "Impassable")*UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -220,7 +309,7 @@ function createUIbuttons() {
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Allpassable")
-    .attr("x", 10 * UIheight)
+    .attr("x", positionlist.indexOf("Allpassable")*UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -251,49 +340,44 @@ function createUIbuttons() {
     }
   });
 
-  // not sure those should be included in the createUIButtons function or put aside
-  // helper function for fullscreen
-  function fullscreen(r) {
-    if (r === "init") {
-      initUI.fullscreen = "notfullscreen";
-      console.log("too early would throw error");
-    } else if (r === "fullscreen") {
-      let fullscreenbutton = d3.selectAll("#Fullscreen");
-      document.exitFullscreen();
-      initUI.fullscreen = "notfullscreen";
-      fullscreenbutton.attr("href", "" + iconsforbuttons.Fullscreen.src + "");
-    } else if (r === "notfullscreen") {
-      let fullscreenbutton = d3.selectAll("#Fullscreen");
-      initUI.fullscreen = "fullscreen";
-      // doesn't reproduce F11 functionnality in that a refresh of the page will also exit fullscreen when entered this way rather than with F11
-      document.querySelector("html").requestFullscreen();
-      //window.open("url.html",'','fullscreen=yes')
-      //that would have been too easy
-      // need to re-measure and redraw
-      //location.reload();
-      fullscreenbutton.attr(
-        "href",
-        "" + iconsforbuttons.Notfullscreen.src + ""
-      );
-    }
+
+ // Change land/water/none Impassable button
+  // old "j" key action
+  svgtop
+    .append("image")
+    .attr("image-rendering", "pixelated")
+    .attr("id", "Worms")
+    .attr("x", positionlist.indexOf("Worms")*UIheight)
+    .attr("y", 0)
+    .attr("width", UIheight)
+    .attr("height", UIheight)
+    .attr("href", "" + iconsforbuttons.Worms.src + "");
+  let Wormsbutton = d3.selectAll("#Worms");
+Wormsbutton.on("click",function (){
+
+  if (arewormsroaming === false){
+    arewormsroaming =true;
+    Wormsbutton.attr("href", "" + iconsforbuttons.Wormsnot.src + "");
+  }
+  else if (arewormsroaming === true){
+    arewormsroaming =false;
+
+    Wormsbutton.attr("href", "" + iconsforbuttons.Worms.src + "");
+
   }
 
-  // helper function for color
-  function color(r) {
-    if (r === "init") {
-      initUI.color = "passed";
-      console.log("too early would throw error");
-    } else if (r === "passed") {
-      let colorbutton = d3.selectAll("#Color");
-      if (isbackgroundcoloractivated === true) {
-        colorbutton.attr("href", "" + iconsforbuttons.Color.src + "");
-        isbackgroundcoloractivated = false;
-        removebackgroundcolors();
-      } else {
-        colorbutton.attr("href", "" + iconsforbuttons.Nocolor.src + "");
-        isbackgroundcoloractivated = true;
-        fbackgroundcolors();
-      }
-    }
-  }
+  Wormsmanager() 
+
+})
+
+
+
+
+
+
+
+
+
+
+
 }

@@ -166,6 +166,7 @@ function showlandmassescontour(landmasseslist) {
     contourtilelist.push([]);
     for (let j = 0; j < landmasseslist[i].length; j++) {
       let cellID = landmasseslist[i][j];
+      // replace with adjacencysuperarray if/when called?
       let neighbor = [...voronoid.neighbors(cellID)];
       if (is1neighbournotpassable(neighbor)) {
         // console.log(cellID + " is a contour tile");

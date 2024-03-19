@@ -65,6 +65,10 @@ var tau = 2 * Math.PI;
 var faketau = Math.floor(100 * tau) / 100;
 var fakertau = 6;
 var aretornadoesactive = false;
+var arewormsroaming = false;
+var wormpopulationrange = [5 , 15];
+var activeworm=[];
+var targetwormpopulation = Math.max(Math.min( Math.floor(numberofcellsatstart/100) , wormpopulationrange[1]),wormpopulationrange[0]);
 var tornadospawner = [];
 var tornadoprespawner = [];
 var tornadopostspawner = [];
@@ -143,6 +147,7 @@ const Earthcolor = {
 const icons = [];
 const iconsforbuttons = {
   Addpoint: { src: "icons/Addpoint.png" },
+  Addedpoint: { src: "icons/Addedpoint.png" },
   Fire: { src: "icons/Fire.png" },
   Impassable: { src: "icons/Impassable.png" },
   Impassablehidden: { src: "icons/Impassablehidden.png" },
@@ -164,6 +169,8 @@ const iconsforbuttons = {
   Allpassable: { src: "icons/Allpassable.png" },
   Musicon: { src: "icons/Musicon.png" },
   Musicoff: { src: "icons/Musicoff.png" },
+  Worms :{src :"icons/Worms.png"},
+  Wormsnot:{ src:"icons/Wormsnot.png"}
 };
 loadUIicons();
 

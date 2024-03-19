@@ -205,6 +205,7 @@ function animatetornadoes(timecounter) {
         // possible up to 9 , performance ?
         // 4 different sheet, for 12 frame
         // explanation doesn't work dunno why can't use more than 1 row 
+        // and only with square images :(
   
         ///////////////////////////////////////////////
         //xMin.......xMid..............xMax//........//
@@ -506,11 +507,15 @@ function at_castertornado() {
   for (element4 of tornadoprecaster) {
     if (element4[1] < 0) {
       // the lightning will try to hit a neighbour cell or a cell neighbour to neighbour
-      let neighbor = [...voronoid.neighbors(element4[0])];
+      let neighbor =[...adjacencysuperarray[element4[0]]];
+      // [...voronoid.neighbors(element4[0])];   
       for (let i = neighbor.length - 1; i >= 0; i--) {
-        let topush = [...voronoid.neighbors(neighbor[i])];
+        let topush =[...adjacencysuperarray[neighbor[i]]];
+       //  [...voronoid.neighbors(neighbor[i])];
+        //[...adjacencysuperarray[neighbor[i]]];
+       // 
         neighbor.push(topush[i]);
-        topush = [];
+       // topush = [];
       }
       let diceroll = Math.floor(neighbor.length * Math.random());
       // push the target after the ID of the cell and the number of frame of animation (8 = 012345678)
@@ -690,10 +695,13 @@ function at_thunderstruck() {
       thunderstruck.splice(i, 1);
     } else {
       let polygon = voronoid.cellPolygon(thunderstruck[i][0]);
+      // if polygon ? necessary to avoid rare error ? why ?
+      // need find cause
+      if(polygon){
       paththunderstruck.moveTo(polygon[0][0], polygon[0][1]);
       for (let j = 1; j < polygon.length - 1; j++) {
         paththunderstruck.lineTo(polygon[j][0], polygon[j][1]);
-      }
+      }}
     }
   }
   svg

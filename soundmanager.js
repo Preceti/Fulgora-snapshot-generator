@@ -59,6 +59,7 @@ function customrepeatplay(targetArray) {
     if (!target) {
       return;
     }
+    target.removeEventListener("ended", setCanplay, false)
     target.pause()
     target.busy =false;
     ambiantsound ="off"
