@@ -1,2 +1,5 @@
+The worm come from https://www.spriters-resource.com/pc_computer/hammerwatch/sheet/71245/ 
+
 The tornado was made with the colors from the planet Fulgora from the game Factorio. It is inspired by that magic wand in terraria that allow you to summon sandsharks that throw sandnadoes or whatever the name. Feel free to reuse and credit me if you don't want to take the blame.
-The lightning animation was made using the colors from the lightning of the game Factorio. It is inspired by the lightning that occurs on the planet Fulgora and allegedly also in the outside world. Feel free to reuse and credit me but you don't have to.
+
+The lightning animations were made using the colors from the lightning of the game Factorio. It is inspired by the lightning that occurs on the planet Fulgora and allegedly also in the outside world. Feel free to reuse and credit me but you don't have to.
