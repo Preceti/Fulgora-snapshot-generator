@@ -163,5 +163,5 @@ function at_wb_wormspicktarget(element) {
     }
   }
 
-  console.log(adjacencysuperarray[element[0]]);
+  //console.log(adjacencysuperarray[element[0]]);
 }
