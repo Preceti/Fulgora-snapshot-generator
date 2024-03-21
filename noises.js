@@ -316,13 +316,17 @@ function cyclerandomdistrib(param) {
       console.log("case 31");
       break;
     case 32:
-      // start mid with noise
+      // start mid with random offset
       datamap = [];
       for (let i = 0; i < numberofcellsatstart; i++) {
+        // max offset in pixel renewed every reset
         let noise = 5;
+        // not sure anymore
         let j = (i + 0.5 * numberofcellsatstart) % numberofcellsatstart;
+        // not sure anymore
         let x =
           Math.floor(((1 + j) * Math.sqrt(averagecellarea)) % width) +
+          // number between -1 or 1 that get multiplied by "noise" to create random offset
           2 * (0.5 - Math.random()) * noise;
         let y =
           ((Math.floor(
@@ -330,7 +334,8 @@ function cyclerandomdistrib(param) {
           ) *
             Math.sqrt(averagecellarea)) %
             height) +
-          2 * (0.5 - Math.random()) * noise;
+           // number between -1 or 1 that get multiplied by "noise" to create random offset
+            2 * (0.5 - Math.random()) * noise;
         datamap.push([x, y]);
       }
       console.log("case 32");

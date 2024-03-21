@@ -1,3 +1,8 @@
+20/03
+
+Worms are moving at constant speed accross orientation and face it but they can go from facing west to south east in a single frame, while it could be made incremental rotation ?
+
+
 19/03
 Realized i could write stuff here to document things i add and don't finish to add because i'm considering options until i forget about them, to avoid adding them again with a different name once i'm finally decided.
 

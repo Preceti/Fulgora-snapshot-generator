@@ -171,7 +171,7 @@ function paintallcellfillcolor(colorobject, attributestringarray) {
       .attr("background", colorobject.colornames[i])
       // make the mesh stand out has very strong impact on overal look
       .attr("stroke", "black")
-      .attr("stroke-width", 2)
+      .attr("stroke-width", meshwidth)
       .attr("stroke-opacity", 0.25);
   }
 }

@@ -223,6 +223,7 @@ function hassomelandneighbour(cellID) {
       mountaincelllist.includes(element)
     ) {
       hassomelandneighbour = true;
+      return hassomelandneighbour;
     }
   }
   return hassomelandneighbour;
@@ -264,6 +265,7 @@ function hassomemountainneighbour(cellID) {
   for (element of neighboured) {
     if (mountaincelllist.includes(element)) {
       hassomemountainneighbour = true;
+      return hassomemountainneighbour;
     }
   }
   neighboured = [];

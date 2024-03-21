@@ -29,6 +29,7 @@ if (str <= 24) {
 
 // svg definition : bounding box
 const boundwidth = 0;
+var meshwidth =2;
 var width = window.innerWidth;
 var height = window.innerHeight - (boundwidth + UIheight);
 //you can change this number to change the number cell at start
