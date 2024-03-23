@@ -6,16 +6,37 @@ createUIbuttons();
 // drawing all centroids
 // adding overlay on all tiles ...
 function createUIbuttons() {
-
   // changing the position here reposition the buttons easy shift
-let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop", "Color","Overlay", "Fullscreen","Impassable","Allpassable","Worms","left","planet","planetislarge","planetislarge", "right" ]
+  let positionlist = [
+    "infobutton",
+    "Sound",
+    "Addpoint",
+    "Sun",
+    "Shuffle",
+    "Leftdistricounter",
+    "Districounter",
+    "Rightdistricounter",
+    "Loop",
+    "Smooth",
+    "Color",
+    "Overlay",
+    "Fullscreen",
+    "Impassable",
+    "Allpassable",
+    "Worms",
+    "left",
+    "planet",
+    "planetislarge",
+    "planetislarge",
+    "right",
+  ];
 
   // Info Button ?
   svgtop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "infobutton")
-    .attr("x", positionlist.indexOf("infobutton")*UIheight)
+    .attr("x", positionlist.indexOf("infobutton") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -33,7 +54,7 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Sound")
-    .attr("x", positionlist.indexOf("Sound")*UIheight)
+    .attr("x", positionlist.indexOf("Sound") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -53,42 +74,28 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     }
   });
 
-
-
-
-
   // Add point
   // isn't actually a button is an indicator when the key that makes the next click add points is being pressed so user is aware it will work before clicking
   svgtop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Addpoint")
-    .attr("x", positionlist.indexOf("Addpoint")*UIheight)
+    .attr("x", positionlist.indexOf("Addpoint") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
     .attr("href", "" + iconsforbuttons.Addpoint.src + "");
   let addpointbutton = d3.selectAll("#Addpoint");
-  addpointbutton.on("click", function (event) {  
+  addpointbutton.on("click", function (event) {
     keybeingpressed = event.key;
-    if  (keybeingpressed==="a"){
-    
+    if (keybeingpressed === "a") {
       addpointbutton.attr("href", "" + iconsforbuttons.Addedpoint.src + "");
-    } 
+    }
   });
-  addpointbutton.on("keyup", function (event) {   
+  addpointbutton.on("keyup", function (event) {
     keybeingpressed = event.key;
-    addpointbutton.attr("href", "" + iconsforbuttons.Addpoint.src + ""); 
+    addpointbutton.attr("href", "" + iconsforbuttons.Addpoint.src + "");
   });
-
-
-
-
-
-
-
-
-
 
   // sun button , need to become a moon sometimes
   // should the UI update in a loop and change itself too ?
@@ -98,7 +105,7 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Sun")
-    .attr("x", positionlist.indexOf("Sun")*UIheight)
+    .attr("x", positionlist.indexOf("Sun") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -121,7 +128,7 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Shuffle")
-    .attr("x", positionlist.indexOf("Shuffle")*UIheight)
+    .attr("x", positionlist.indexOf("Shuffle") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -135,7 +142,8 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
       deactivatetornadoes();
     }
     isbackgroundcoloractivated = false;
-    cyclerandomdistrib();
+    cyclerandomdistrib("shuffle");
+    districountercounter();
   });
 
   // Smooth button
@@ -144,7 +152,7 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Smooth")
-    .attr("x",  positionlist.indexOf("Smooth")*UIheight)
+    .attr("x", positionlist.indexOf("Smooth") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -163,13 +171,12 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
   });
 
   // Loop  button
-  // to work with shuffle
-  // somewhat not implemented
+  // work with shuffle
   svgtop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Loop")
-    .attr("x", positionlist.indexOf( "Loop")*UIheight)
+    .attr("x", positionlist.indexOf("Loop") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -186,7 +193,7 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Color")
-    .attr("x",  positionlist.indexOf( "Color")*UIheight)
+    .attr("x", positionlist.indexOf("Color") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -196,24 +203,24 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     color(initUI.color);
   });
 
-    // helper function for color
-    function color(r) {
-      if (r === "init") {
-        initUI.color = "passed";
-        console.log("too early would throw error");
-      } else if (r === "passed") {
-        let colorbutton = d3.selectAll("#Color");
-        if (isbackgroundcoloractivated === true) {
-          colorbutton.attr("href", "" + iconsforbuttons.Color.src + "");
-          isbackgroundcoloractivated = false;
-          removebackgroundcolors();
-        } else {
-          colorbutton.attr("href", "" + iconsforbuttons.Nocolor.src + "");
-          isbackgroundcoloractivated = true;
-          fbackgroundcolors();
-        }
+  // helper function for color
+  function color(r) {
+    if (r === "init") {
+      initUI.color = "passed";
+      console.log("too early would throw error");
+    } else if (r === "passed") {
+      let colorbutton = d3.selectAll("#Color");
+      if (isbackgroundcoloractivated === true) {
+        colorbutton.attr("href", "" + iconsforbuttons.Color.src + "");
+        isbackgroundcoloractivated = false;
+        removebackgroundcolors();
+      } else {
+        colorbutton.attr("href", "" + iconsforbuttons.Nocolor.src + "");
+        isbackgroundcoloractivated = true;
+        fbackgroundcolors();
       }
     }
+  }
 
   // Paint overlay button
   // old "t" key action
@@ -221,7 +228,7 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Overlay")
-    .attr("x",  positionlist.indexOf( "Overlay")*UIheight)
+    .attr("x", positionlist.indexOf("Overlay") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -237,7 +244,7 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Fullscreen")
-    .attr("x",positionlist.indexOf( "Fullscreen")*UIheight)
+    .attr("x", positionlist.indexOf("Fullscreen") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -274,15 +281,13 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     }
   }
 
-
-
   // Paint/hide Impassable button
   // old "k" key action
   svgtop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Impassable")
-    .attr("x",positionlist.indexOf( "Impassable")*UIheight)
+    .attr("x", positionlist.indexOf("Impassable") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -309,7 +314,7 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Allpassable")
-    .attr("x", positionlist.indexOf("Allpassable")*UIheight)
+    .attr("x", positionlist.indexOf("Allpassable") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
@@ -340,44 +345,208 @@ let positionlist=["infobutton","Sound","Addpoint","Sun","Shuffle","Smooth","Loop
     }
   });
 
-
- // Change land/water/none Impassable button
+  // Change land/water/none Impassable button
   // old "j" key action
   svgtop
     .append("image")
     .attr("image-rendering", "pixelated")
     .attr("id", "Worms")
-    .attr("x", positionlist.indexOf("Worms")*UIheight)
+    .attr("x", positionlist.indexOf("Worms") * UIheight)
     .attr("y", 0)
     .attr("width", UIheight)
     .attr("height", UIheight)
     .attr("href", "" + iconsforbuttons.Worms.src + "");
   let Wormsbutton = d3.selectAll("#Worms");
-Wormsbutton.on("click",function (){
+  Wormsbutton.on("click", function () {
+    if (arewormsroaming === false) {
+      arewormsroaming = true;
+      Wormsbutton.attr("href", "" + iconsforbuttons.Wormsnot.src + "");
+    } else if (arewormsroaming === true) {
+      arewormsroaming = false;
 
-  if (arewormsroaming === false){
-    arewormsroaming =true;
-    Wormsbutton.attr("href", "" + iconsforbuttons.Wormsnot.src + "");
+      Wormsbutton.attr("href", "" + iconsforbuttons.Worms.src + "");
+    }
+
+    Wormsmanager();
+  });
+
+  // Left districounter
+  svgtop
+    .append("image")
+    .attr("image-rendering", "pixelated")
+    .attr("id", "Leftdistricounter")
+    .attr("x", positionlist.indexOf("Leftdistricounter") * UIheight)
+    .attr("y", 0)
+    .attr("width", UIheight)
+    .attr("height", UIheight)
+    .attr("href", "" + iconsforbuttons.Left.src + "");
+  let Leftdistricounterbutton = d3.selectAll("#Leftdistricounter");
+  Leftdistricounterbutton.on("click", function (event) {
+    if (daynight === "on") {
+      daynight = "off";
+
+      daynightcycler();
+      deactivatetornadoes();
+    }
+    isbackgroundcoloractivated = false;
+    cyclerandomdistrib("previous");
+    districountercounter();
+  });
+  // Right districounter
+  svgtop
+    .append("image")
+    .attr("image-rendering", "pixelated")
+    .attr("id", "Rightdistricounter")
+    .attr("x", positionlist.indexOf("Rightdistricounter") * UIheight)
+    .attr("y", 0)
+    .attr("width", UIheight)
+    .attr("height", UIheight)
+    .attr("href", "" + iconsforbuttons.Right.src + "");
+  let Rightdistricounterbutton = d3.selectAll("#Rightdistricounter");
+  Rightdistricounterbutton.on("click", function (event) {
+    if (daynight === "on") {
+      daynight = "off";
+
+      daynightcycler();
+      deactivatetornadoes();
+    }
+    isbackgroundcoloractivated = false;
+    cyclerandomdistrib("next");
+    districountercounter();
+  });
+
+  // districounter first digit
+  svgtop
+    .append("image")
+    .attr("image-rendering", "pixelated")
+    .attr("id", "districounter1")
+    .attr("x", positionlist.indexOf("Districounter") * UIheight - UIheight / 4)
+    .attr("y", 0)
+    .attr("width", UIheight)
+    .attr("height", UIheight)
+    .attr("href", "" + iconsforbuttons.zero.src + "");
+
+  // districounter second digit
+  svgtop
+    .append("image")
+    .attr("image-rendering", "pixelated")
+    .attr("id", "districounter2")
+    .attr("x", positionlist.indexOf("Districounter") * UIheight + UIheight / 4)
+    .attr("y", 0)
+    .attr("width", UIheight)
+    .attr("height", UIheight)
+    .attr("href", "" + iconsforbuttons.one.src + "");
+
+  // it keep track of the the count to show in the counter that show the current count of the districounter
+  // haha
+  function districountercounter() {
+    // the following piece of code is probably horrible, but i thought it would be funny to have a counter in hex or in sexagesimal maybe like it's an alien langage as part of a theme
+    // i didn't know it's forbidden to use a digit as the key for part of the src  like iconsforbuttons.4.src
+
+    let firstdigit = Math.floor((districounter + 1) / 10);
+    let seconddigit = districounter + 1 - 10 * firstdigit;
+
+    switch (firstdigit) {
+      case 0:
+        d3.select("#districounter1").attr(
+          "href",
+          "" + iconsforbuttons.zero.src + ""
+        );
+        break;
+
+      case 1:
+        d3.select("#districounter1").attr(
+          "href",
+          "" + iconsforbuttons.one.src + ""
+        );
+        break;
+      case 2:
+        d3.select("#districounter1").attr(
+          "href",
+          "" + iconsforbuttons.two.src + ""
+        );
+        break;
+      case 3:
+        d3.select("#districounter1").attr(
+          "href",
+          "" + iconsforbuttons.three.src + ""
+        );
+        break;
+      case 4:
+        d3.select("#districounter1").attr(
+          "href",
+          "" + iconsforbuttons.four.src + ""
+        );
+        break;
+      case 5:
+        d3.select("#districounter1").attr(
+          "href",
+          "" + iconsforbuttons.five.src + ""
+        );
+        break;
+    }
+
+    switch (seconddigit) {
+      case 0:
+        d3.select("#districounter2").attr(
+          "href",
+          "" + iconsforbuttons.zero.src + ""
+        );
+        break;
+      case 1:
+        d3.select("#districounter2").attr(
+          "href",
+          "" + iconsforbuttons.one.src + ""
+        );
+        break;
+      case 2:
+        d3.select("#districounter2").attr(
+          "href",
+          "" + iconsforbuttons.two.src + ""
+        );
+        break;
+      case 3:
+        d3.select("#districounter2").attr(
+          "href",
+          "" + iconsforbuttons.three.src + ""
+        );
+        break;
+      case 4:
+        d3.select("#districounter2").attr(
+          "href",
+          "" + iconsforbuttons.four.src + ""
+        );
+        break;
+      case 5:
+        d3.select("#districounter2").attr(
+          "href",
+          "" + iconsforbuttons.five.src + ""
+        );
+        break;
+      case 6:
+        d3.select("#districounter2").attr(
+          "href",
+          "" + iconsforbuttons.six.src + ""
+        );
+        break;
+      case 7:
+        d3.select("#districounter2").attr(
+          "href",
+          "" + iconsforbuttons.seven.src + ""
+        );
+        break;
+      case 8:
+        d3.select("#districounter2").attr(
+          "href",
+          "" + iconsforbuttons.eight.src + ""
+        );
+        break;
+      case 9:
+        d3.select("#districounter2").attr(
+          "href",
+          "" + iconsforbuttons.nine.src + ""
+        );
+        break;
+    }
   }
-  else if (arewormsroaming === true){
-    arewormsroaming =false;
-
-    Wormsbutton.attr("href", "" + iconsforbuttons.Worms.src + "");
-
-  }
-
-  Wormsmanager() 
-
-})
-
-
-
-
-
-
-
-
-
-
-
 }

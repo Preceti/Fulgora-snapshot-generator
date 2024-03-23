@@ -1,8 +1,12 @@
-// this is needed so that we can make the UI that has function touching the main svg before the main svg
+// this is needed so that we can make the UI that has function touching the main svg before the main svg ?
 var initUI = { color: "init", fullscreen: "notfullscreen" };
 
 //measure which size user use for text
 function init() {
+  // change the title of the page, and provide some lorem ipsum like content to be used for measuring user display setup
+  newPageTitle = "The title has changed!";
+  document.title = newPageTitle;
+
   var heightof1text = 0;
   // create a dummy box that will be deleted later, that takes the height of the screen to make sure a text fit in
   let svgdummy = d3

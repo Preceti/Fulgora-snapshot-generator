@@ -29,11 +29,11 @@ if (str <= 24) {
 
 // svg definition : bounding box
 const boundwidth = 0;
-var meshwidth =2;
+var meshwidth = 2;
 var width = window.innerWidth;
 var height = window.innerHeight - (boundwidth + UIheight);
 //you can change this number to change the number cell at start
-const numberofcellsatstart = 2500;
+const numberofcellsatstart = 1500;
 //bigger number here means more land vs water
 // [0.5-1.5] are quite extreme bound already
 // 0.72 is ok for most value between 1000 and  20K points
@@ -67,9 +67,12 @@ var faketau = Math.floor(100 * tau) / 100;
 var fakertau = 6;
 var aretornadoesactive = false;
 var arewormsroaming = false;
-var wormpopulationrange = [5 , 15];
-var activeworm=[];
-var targetwormpopulation = Math.max(Math.min( Math.floor(numberofcellsatstart/100) , wormpopulationrange[1]),wormpopulationrange[0]);
+var wormpopulationrange = [5, 15];
+var activeworm = [];
+var targetwormpopulation = Math.max(
+  Math.min(Math.floor(numberofcellsatstart / 100), wormpopulationrange[1]),
+  wormpopulationrange[0]
+);
 var tornadospawner = [];
 var tornadoprespawner = [];
 var tornadopostspawner = [];
@@ -170,9 +173,22 @@ const iconsforbuttons = {
   Allpassable: { src: "icons/Allpassable.png" },
   Musicon: { src: "icons/Musicon.png" },
   Musicoff: { src: "icons/Musicoff.png" },
-  Worms :{src :"icons/Worms.png"},
-  Wormsnot:{ src:"icons/Wormsnot.png"}
+  Worms: { src: "icons/Worms.png" },
+  Wormsnot: { src: "icons/Wormsnot.png" },
+  Left: { src: "icons/Left.png" },
+  Right: { src: "icons/Right.png" },
+  zero: { src: "font/0.png" },
+  one: { src: "font/1.png" },
+  two: { src: "font/2.png" },
+  three: { src: "font/3.png" },
+  four: { src: "font/4.png" },
+  five: { src: "font/5.png" },
+  six: { src: "font/6.png" },
+  seven: { src: "font/7.png" },
+  eight: { src: "font/8.png" },
+  nine: { src: "font/9.png" },
 };
+
 loadUIicons();
 
 // function to load icons images

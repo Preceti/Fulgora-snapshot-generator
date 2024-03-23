@@ -1241,7 +1241,7 @@ function daynightcycler() {
       // call on the lights check each update may be smarter to stagger with % so every 5 updates, 10% of nodes are checked for performance
       turnonthelights(timecounter);
       animatetornadoes(timecounter);
-      animateworms(timecounter,svg)
+      animateworms(timecounter, svg);
 
       // wait before update
       await delay(dayticktime);

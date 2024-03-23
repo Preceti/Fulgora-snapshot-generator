@@ -209,7 +209,6 @@ function is1neighbournotpassable(neighboursarray) {
     if (!passablecelllist.includes(element)) {
       atleast1neighbourisnotpassable = true;
       return atleast1neighbourisnotpassable;
-      
     }
   }
   return atleast1neighbourisnotpassable;
